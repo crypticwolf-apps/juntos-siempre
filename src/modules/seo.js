@@ -25,14 +25,14 @@ export function initSeo() {
   const title = document.title || 'Juntos Siempre';
   const desc = document.querySelector('meta[name="description"]')?.content
     || 'Ropa de calidad con el logo bordado sobre el corazón. Luchar JUNTOS. Ayudarnos SIEMPRE.';
-  const ogImage = '/og-image.jpg';
+  const ogImage = new URL('og-image.jpg', document.baseURI).href;
   const url = location.origin + location.pathname;
 
   // PWA
   ensure('link[rel="manifest"]', () => {
     const l = document.createElement('link');
     l.rel = 'manifest';
-    l.href = '/manifest.webmanifest';
+    l.href = 'manifest.webmanifest';
     return l;
   });
   ensure('meta[name="apple-mobile-web-app-capable"]', () => metaName('apple-mobile-web-app-capable', 'yes'));

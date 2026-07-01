@@ -109,7 +109,7 @@ function initFavicon() {
     link.setAttribute('data-dynamic', '');
     document.head.appendChild(link);
   }
-  const apply = () => { link.href = mq.matches ? '/favicon-dark.svg' : '/favicon-light.svg'; };
+  const apply = () => { link.href = mq.matches ? 'favicon-dark.svg' : 'favicon-light.svg'; };
   apply();
   if (mq.addEventListener) mq.addEventListener('change', apply);
 }

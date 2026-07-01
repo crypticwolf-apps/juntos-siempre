@@ -1,0 +1,20 @@
+{
+  "name": "juntos-siempre",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Web e-commerce premium para la marca de ropa solidaria Juntos Siempre.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "optimize:images": "node scripts/optimize-images.mjs"
+  },
+  "dependencies": {
+    "lucide": "^0.460.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.3",
+    "vite": "^5.4.10"
+  }
+}

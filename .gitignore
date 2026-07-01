@@ -1,0 +1,11 @@
+node_modules
+dist
+.DS_Store
+*.local
+.vite
+# Carpeta temporal de extracción del kit
+_kit_extract
+_img_originals
+icono.png
+ChatGPT Image*.png
+Juntos_Siempre_Kit_Web_Alta_Resolucion.zip

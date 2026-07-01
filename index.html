@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/favicon-light.svg" media="(prefers-color-scheme: light)" />
+    <link rel="icon" href="/favicon-dark.svg" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0e0e0d" media="(prefers-color-scheme: dark)" />
+    <meta name="description" content="Juntos Siempre — moda minimalista, premium y emocional con el logo bordado sobre el corazón. Luchar JUNTOS. Ayudarnos SIEMPRE." />
+    <title>Juntos Siempre — Luchar JUNTOS. Ayudarnos SIEMPRE.</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Juntos Siempre" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!-- Open Graph / redes -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Juntos Siempre" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:title" content="Juntos Siempre — Luchar JUNTOS. Ayudarnos SIEMPRE." />
+    <meta property="og:description" content="Ropa de calidad, creada para llevar cerca del corazón." />
+    <meta property="og:image" content="/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Juntos Siempre" />
+    <meta name="twitter:description" content="Ropa de calidad con el logo bordado sobre el corazón. Luchar JUNTOS. Ayudarnos SIEMPRE." />
+    <meta name="twitter:image" content="/og-image.jpg" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Juntos Siempre",
+        "slogan": "Luchar JUNTOS. Ayudarnos SIEMPRE.",
+        "description": "Ropa minimalista de calidad con el logo bordado sobre el corazón.",
+        "logo": "/icon-512.png"
+      }
+    </script>
+  </head>
+  <body data-page="home" data-hero>
+    <a class="skip-link" href="#main">Saltar al contenido</a>
+    <header data-site-header></header>
+
+    <main id="main">
+      <!-- ============ HERO ============ -->
+      <section class="hero hero--top" aria-label="Juntos Siempre">
+        <div class="hero__media">
+          <img
+            src="./src/assets/editorial/hero-juntos-siempre-montana-atardecer.webp"
+            alt="Tres grupos disfrutan de un atardecer en la montaña: una pareja de abuelos, una familia con perro y dos amigos"
+            class="hero__img"
+            data-hero-img
+            fetchpriority="high"
+            decoding="async"
+            width="1536"
+            height="1024"
+          />
+          <div class="hero__overlay"></div>
+        </div>
+        <div class="hero__content hero__content--top">
+          <p class="hero__brand" data-hero-anim>Juntos Siempre</p>
+          <h1 class="hero__slogan" data-hero-anim>
+            <span class="hero__slogan-line">Luchar JUNTOS.</span>
+            <span class="hero__slogan-line">Ayudarnos SIEMPRE.</span>
+          </h1>
+          <p class="hero__text" data-hero-anim>Ropa de calidad, creada para llevar cerca del corazón.</p>
+          <div class="hero__actions" data-hero-anim>
+            <a href="tienda.html" class="btn btn--light">Comprar colección</a>
+            <a href="historia.html" class="btn btn--glass">Conocer la marca</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CONFIANZA ============ -->
+      <section class="trust" aria-label="Garantías de Juntos Siempre">
+        <ul class="trust__list">
+          <li class="trust__item" data-anim>
+            <i data-lucide="truck" aria-hidden="true"></i>
+            <span>Envío en 24/48&nbsp;h</span>
+          </li>
+          <li class="trust__item" data-anim>
+            <i data-lucide="shield-check" aria-hidden="true"></i>
+            <span>Pago seguro</span>
+          </li>
+          <li class="trust__item" data-anim>
+            <i data-lucide="sparkles" aria-hidden="true"></i>
+            <span>Calidad premium</span>
+          </li>
+          <li class="trust__item" data-anim>
+            <i data-lucide="rotate-ccw" aria-hidden="true"></i>
+            <span>Devoluciones sencillas</span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ============ COLECCIÓN ============ -->
+      <section class="section collection">
+        <div class="section__head section__head--center" data-anim>
+          <p class="eyebrow">Colección</p>
+          <h2 class="section__title">Explora la colección</h2>
+          <p class="section__lead">Camisetas, sudaderas, gorras y accesorios. Logo bordado sobre el corazón.</p>
+        </div>
+        <div class="collection__grid" data-categories data-anim-group></div>
+      </section>
+
+      <!-- ============ DESTACADOS ============ -->
+      <section class="section featured">
+        <div class="section__head section__head--row" data-anim>
+          <div>
+            <p class="eyebrow">Destacados</p>
+            <h2 class="section__title">Prendas esenciales</h2>
+          </div>
+          <a href="tienda.html" class="section__link">Ver toda la tienda <i data-lucide="arrow-right"></i></a>
+        </div>
+        <div class="product-grid product-grid--featured" data-featured data-anim-group></div>
+      </section>
+
+      <!-- ============ CALIDAD ============ -->
+      <section class="section quality">
+        <div class="quality__intro" data-anim>
+          <p class="eyebrow">Producto</p>
+          <h2 class="section__title">Hecho para quedarse.</h2>
+          <p class="section__lead">Algodón de calidad. Bordado sobre el corazón. Diseño limpio para acompañarte durante años.</p>
+        </div>
+        <div class="quality__grid" data-anim-group>
+          <figure class="quality__item quality__item--tall">
+            <img src="./src/assets/packaging/detalle-bordado.jpg" alt="Macro del bordado del logo sobre la prenda" loading="lazy" decoding="async" />
+          </figure>
+          <figure class="quality__item">
+            <img src="./src/assets/story/calidad-bordado.jpg" alt="Detalle del tejido de algodón" loading="lazy" decoding="async" />
+          </figure>
+          <figure class="quality__item">
+            <img src="./src/assets/packaging/sudadera-packaging.jpg" alt="Prenda doblada con su packaging" loading="lazy" decoding="async" />
+          </figure>
+        </div>
+      </section>
+
+      <!-- ============ EMOCIONAL ============ -->
+      <section class="section emotional">
+        <div class="emotional__copy" data-anim>
+          <p class="eyebrow">La idea</p>
+          <h2 class="section__title">No es solo una prenda.</h2>
+          <p class="section__lead">Es una forma de estar cerca. De recordar a alguien que cuenta contigo. De regalar algo que no se explica con facilidad.</p>
+        </div>
+        <div class="emotional__gallery" data-anim-group>
+          <figure><img src="./src/assets/models/amigos-unidos.jpg" alt="Amigos abrazados al atardecer" loading="lazy" decoding="async" /><figcaption>Amistad</figcaption></figure>
+          <figure><img src="./src/assets/models/familia-juntos.jpg" alt="Familia reunida al aire libre" loading="lazy" decoding="async" /><figcaption>Familia</figcaption></figure>
+          <figure><img src="./src/assets/models/pareja-atardecer.jpg" alt="Pareja sentada al atardecer" loading="lazy" decoding="async" /><figcaption>Pareja</figcaption></figure>
+          <figure><img src="./src/assets/story/regalo-mensaje.jpg" alt="Regalo de la marca con una tarjeta" loading="lazy" decoding="async" /><figcaption>Regalo</figcaption></figure>
+        </div>
+      </section>
+
+      <!-- ============ REGALO ============ -->
+      <section class="section gift" id="regalo">
+        <div class="gift__media" data-anim>
+          <img src="./src/assets/packaging/etiqueta-regalo.jpg" alt="Caja regalo y prenda de Juntos Siempre" loading="lazy" decoding="async" />
+        </div>
+        <div class="gift__content" data-anim>
+          <p class="eyebrow">Regalo</p>
+          <h2 class="section__title">Un regalo que dice más.</h2>
+          <p class="section__lead">Añade una caja regalo y una tarjeta personal. Porque algunas cosas se dicen mejor cuando se llevan cerca.</p>
+          <label class="gift-message field">
+            <span>Mensaje para la tarjeta</span>
+            <textarea rows="3" data-gift-message placeholder="Escribe unas palabras…"></textarea>
+          </label>
+          <button class="btn btn--primary" type="button" data-create-gift>Crear un regalo</button>
+        </div>
+      </section>
+
+      <!-- ============ COMPROMISO ============ -->
+      <section class="section commitment">
+        <div class="commitment__inner" data-anim>
+          <p class="eyebrow eyebrow--light">Compromiso</p>
+          <h2 class="section__title section__title--light">Vestir también puede ayudar.</h2>
+          <p class="commitment__text">
+            Juntos Siempre nace con el compromiso de destinar una parte fija de sus beneficios
+            a ayuda ante emergencias y catástrofes. Cuando existan aportaciones, se comunicarán
+            con claridad y respeto.
+          </p>
+          <ul class="commitment__pledges">
+            <li class="commitment__pledge">
+              <i data-lucide="heart-handshake" aria-hidden="true"></i>
+              <span class="commitment__pledge-title">Aportación comprometida</span>
+              <span class="commitment__pledge-text">Una parte fija de los beneficios, decidida de antemano.</span>
+            </li>
+            <li class="commitment__pledge">
+              <i data-lucide="file-check" aria-hidden="true"></i>
+              <span class="commitment__pledge-title">Comunicación verificable</span>
+              <span class="commitment__pledge-text">Destino, entidad, importe y fecha de cada aportación real.</span>
+            </li>
+            <li class="commitment__pledge">
+              <i data-lucide="leaf" aria-hidden="true"></i>
+              <span class="commitment__pledge-title">Con respeto</span>
+              <span class="commitment__pledge-text">Ayuda con dignidad, nunca usando el dolor como reclamo.</span>
+            </li>
+          </ul>
+          <a href="impacto.html" class="btn btn--light">Conocer el compromiso</a>
+        </div>
+      </section>
+
+      <!-- ============ NEWSLETTER ============ -->
+      <section class="section newsletter">
+        <div class="newsletter__inner" data-anim>
+          <div class="newsletter__copy">
+            <p class="eyebrow">Newsletter</p>
+            <h2 class="section__title">Mantente cerca.</h2>
+            <p class="section__lead">Lanzamientos, historias y novedades de Juntos Siempre.</p>
+          </div>
+          <form class="newsletter__form" data-newsletter novalidate>
+            <div class="newsletter__fields">
+              <label class="field">
+                <span class="sr-only">Nombre</span>
+                <input type="text" name="name" placeholder="Nombre" required autocomplete="name" />
+              </label>
+              <label class="field">
+                <span class="sr-only">Email</span>
+                <input type="email" name="email" placeholder="Email" required autocomplete="email" />
+              </label>
+              <button class="btn btn--primary" type="submit">Suscribirme</button>
+            </div>
+            <label class="checkbox">
+              <input type="checkbox" name="accept" required />
+              <span>Acepto recibir comunicaciones de Juntos Siempre.</span>
+            </label>
+            <p class="form-feedback" data-newsletter-msg role="status"></p>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <footer data-site-footer></footer>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

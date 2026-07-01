@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/favicon-light.svg" media="(prefers-color-scheme: light)" />
+    <link rel="icon" href="/favicon-dark.svg" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0e0e0d" media="(prefers-color-scheme: dark)" />
+    <meta name="description" content="Colección Juntos Siempre: camisetas, sudaderas, gorras y accesorios con el logo bordado sobre el corazón." />
+    <title>Tienda — Juntos Siempre</title>
+  </head>
+  <body data-page="shop">
+    <a class="skip-link" href="#main">Saltar al catálogo</a>
+    <header data-site-header></header>
+
+    <main id="main" class="page">
+      <section class="page-hero">
+        <p class="eyebrow">Tienda</p>
+        <h1 class="page-hero__title" data-shop-title>Colección</h1>
+        <p class="page-hero__lead">Prendas limpias, colores sobrios y el bordado siempre cerca del corazón.</p>
+      </section>
+
+      <section class="shop">
+        <div class="shop__bar">
+          <button class="shop__filter-toggle btn btn--outline btn--sm" type="button" data-filter-toggle aria-expanded="false" aria-controls="filters">
+            <i data-lucide="sliders-horizontal"></i> Filtrar y ordenar
+          </button>
+          <p class="shop__count" data-shop-count aria-live="polite"></p>
+          <label class="shop__sort">
+            <span class="sr-only">Ordenar por</span>
+            <select data-sort></select>
+          </label>
+        </div>
+
+        <div class="shop__layout">
+          <div class="filters-overlay" data-filters-overlay hidden></div>
+          <aside class="filters" id="filters" data-filters aria-label="Filtros del catálogo">
+            <div class="filters__head">
+              <h2 class="filters__title">Filtrar y ordenar</h2>
+              <button class="icon-btn" type="button" data-filters-close aria-label="Cerrar filtros"><i data-lucide="x"></i></button>
+            </div>
+            <div class="filters__groups" data-filter-groups></div>
+            <div class="filters__foot">
+              <button class="btn btn--primary btn--full" type="button" data-filters-apply>Ver resultados</button>
+            </div>
+          </aside>
+
+          <div class="shop__main">
+            <div class="product-grid" data-product-grid></div>
+            <div class="empty-state" data-shop-empty hidden>
+              <i data-lucide="search-x"></i>
+              <p>No hay prendas con estos filtros.</p>
+              <button class="btn btn--outline" type="button" data-clear-filters>Quitar filtros</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer data-site-footer></footer>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Juntos Siempre</title>
+    <link rel="icon" type="image/png" href="public/favicon.png" />
+    <style>
+      :root { color-scheme: dark; }
+      * { margin: 0; box-sizing: border-box; }
+      body {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 2rem;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        color: #f4f1ea;
+        background: radial-gradient(120% 120% at 50% 0%, #232220 0%, #0e0e0d 60%);
+        text-align: center;
+      }
+      .launcher { max-width: 520px; width: 100%; }
+      .launcher__logo { width: 220px; max-width: 70%; height: auto; margin: 0 auto 2.2rem; display: block; opacity: 0.95; }
+      .launcher__slogan {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: clamp(1.6rem, 5vw, 2.4rem);
+        font-weight: 500;
+        line-height: 1.15;
+        letter-spacing: -0.01em;
+        margin-bottom: 1rem;
+      }
+      .launcher__text { color: #b8b3a8; font-size: 1rem; line-height: 1.6; margin-bottom: 2.2rem; }
+      .launcher__btn {
+        display: inline-block;
+        padding: 1rem 2.4rem;
+        border-radius: 4px;
+        background: #f4f1ea;
+        color: #0e0e0d;
+        font-weight: 600;
+        font-size: 1rem;
+        letter-spacing: 0.02em;
+        text-decoration: none;
+        transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+      }
+      .launcher__btn:hover { transform: translateY(-2px); box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45); background: #fff; }
+      .launcher__btn:focus-visible { outline: 2px solid #cdbb9c; outline-offset: 4px; }
+      .launcher__hint {
+        margin-top: 2.4rem;
+        font-size: 0.82rem;
+        color: #807c72;
+        line-height: 1.7;
+      }
+      .launcher__hint code {
+        background: rgba(244, 241, 234, 0.08);
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.85em;
+      }
+      .launcher__url { color: #cdbb9c; }
+    </style>
+  </head>
+  <body>
+    <main class="launcher">
+      <img class="launcher__logo" src="src/assets/logo/logo-blanco.png" alt="Juntos Siempre" />
+      <p class="launcher__slogan">Luchar JUNTOS.<br />Ayudarnos SIEMPRE.</p>
+      <p class="launcher__text">Ropa de calidad, creada para llevar cerca del corazón.</p>
+      <a class="launcher__btn" href="http://localhost:5173/">Abrir Juntos Siempre</a>
+      <p class="launcher__hint">
+        Primero, en la carpeta del proyecto, ejecuta:<br />
+        <code>npm install</code> y luego <code>npm run dev</code><br />
+        La web se abrirá en <span class="launcher__url">http://localhost:5173/</span>
+      </p>
+    </main>
+  </body>
+</html>

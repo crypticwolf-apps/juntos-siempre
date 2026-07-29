@@ -25,6 +25,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+        env:
+          # Conexión con el gestor de contenido. La clave "anon" es pública por
+          # diseño (viaja en la web); lo que protege los datos son las políticas
+          # de seguridad de la base de datos, no el secreto de esta clave.
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
       - uses: actions/configure-pages@v5
         with:
           enablement: true

@@ -1,5 +1,34 @@
 # Cómo activar el panel de gestión de Juntos Siempre
 
+> ## ⚡ YA ESTÁ CASI TODO HECHO
+>
+> La instalación se hizo el **29 de julio de 2026**. Ya están listos:
+>
+> - ✅ El proyecto de Supabase (`juntos-siempre`, servidores en París)
+> - ✅ Las tablas, la seguridad y el contenedor de fotos
+> - ✅ Los textos, las 4 categorías y los 6 productos actuales
+> - ✅ Las claves conectadas al despliegue automático
+> - ✅ El registro público cerrado (comprobado: nadie puede darse de alta)
+>
+> **Solo te queda una cosa: crear tu usuario.** Son 2 minutos:
+>
+> 1. Entra en **https://supabase.com/dashboard/project/prbphmybpczjndrgsceq/auth/users**
+> 2. Pulsa **Add user** → **Create new user**
+> 3. Escribe tu correo y **la contraseña que tú quieras** (mínimo 8 caracteres).
+>    Elígela tú: yo no he creado ninguna contraseña en tu nombre.
+> 4. Marca la casilla **Auto Confirm User** (importante, si no no podrás entrar)
+> 5. Pulsa **Create user**
+>
+> **La primera cuenta que se cree será automáticamente la administradora**, así
+> que no tienes que ejecutar ninguna consulta. Después entra en:
+>
+> **https://crypticwolf-apps.github.io/juntos-siempre/admin.html**
+>
+> El resto de esta guía queda como referencia por si algún día hay que repetir
+> la instalación desde cero o montarla en otro sitio.
+
+---
+
 Esta guía está escrita para hacerse **sin saber programar**. Solo hay que copiar
 y pegar, y pulsar botones. Tardarás unos 20 minutos.
 

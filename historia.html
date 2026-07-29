@@ -20,20 +20,20 @@
 
     <main id="main">
       <!-- HERO HISTORIA -->
-      <section class="story-hero" aria-label="Nuestra historia">
+      <section class="story-hero" aria-label="Nuestra historia" data-cms-section="story.hero">
         <div class="story-hero__media">
-          <img src="./src/assets/models/amigos-unidos.jpg" alt="Amigos abrazados mirando el horizonte" class="story-hero__img" data-hero-img fetchpriority="high" decoding="async" width="2200" height="1800" />
+          <img src="./src/assets/models/amigos-unidos.jpg" alt="Amigos abrazados mirando el horizonte" class="story-hero__img" data-hero-img fetchpriority="high" decoding="async" width="2200" height="1800" data-cms-img="story.hero.image" data-cms-alt="story.hero.image_alt" />
           <div class="hero__overlay"></div>
         </div>
         <div class="story-hero__content">
-          <p class="eyebrow eyebrow--light" data-hero-anim>Nuestra historia</p>
-          <h1 class="story-hero__title" data-hero-anim>Juntos Siempre no empieza con una camiseta.</h1>
-          <p class="story-hero__text" data-hero-anim>Empieza con una idea sencilla: hay personas que, incluso cuando no saben qué decir, deciden estar.</p>
-          <p class="story-hero__slogan" data-hero-anim>Luchar JUNTOS. Ayudarnos SIEMPRE.</p>
+          <p class="eyebrow eyebrow--light" data-hero-anim data-cms-text="story.hero.eyebrow">Nuestra historia</p>
+          <h1 class="story-hero__title" data-hero-anim data-cms-text="story.hero.title">Juntos Siempre no empieza con una camiseta.</h1>
+          <p class="story-hero__text" data-hero-anim data-cms-text="story.hero.text">Empieza con una idea sencilla: hay personas que, incluso cuando no saben qué decir, deciden estar.</p>
+          <p class="story-hero__slogan" data-hero-anim data-cms-text="story.hero.slogan">Luchar JUNTOS. Ayudarnos SIEMPRE.</p>
         </div>
       </section>
 
-      <div class="chapters">
+      <div class="chapters" data-cms-section="story.chapters">
         <!-- CAP 1 -->
         <article class="chapter" data-anim>
           <div class="chapter__media media--left"><img src="./src/assets/models/pareja-atardecer.jpg" alt="Pareja sentada al atardecer" loading="lazy" decoding="async" /></div>
@@ -106,13 +106,13 @@
       </div>
 
       <!-- MANIFIESTO / CIERRE -->
-      <section class="manifesto">
+      <section class="manifesto" data-cms-section="story.manifesto">
         <div class="manifesto__inner" data-anim>
-          <h2 class="manifesto__title">Luchar JUNTOS. Ayudarnos SIEMPRE.</h2>
-          <p class="manifesto__text">Porque todos necesitamos a alguien. Porque estar también es cuidar. Porque una prenda puede recordar lo que importa. Porque, al final, lo que nos une es lo que permanece.</p>
+          <h2 class="manifesto__title" data-cms-text="story.manifesto.title">Luchar JUNTOS. Ayudarnos SIEMPRE.</h2>
+          <p class="manifesto__text" data-cms-text="story.manifesto.text">Porque todos necesitamos a alguien. Porque estar también es cuidar. Porque una prenda puede recordar lo que importa. Porque, al final, lo que nos une es lo que permanece.</p>
           <div class="manifesto__actions">
-            <a href="tienda.html" class="btn btn--light">Ver la colección</a>
-            <a href="impacto.html" class="btn btn--glass">Conocer el compromiso</a>
+            <a href="tienda.html" class="btn btn--light" data-cms-text="story.manifesto.cta1_label" data-cms-attr="href:story.manifesto.cta1_href">Ver la colección</a>
+            <a href="impacto.html" class="btn btn--glass" data-cms-text="story.manifesto.cta2_label" data-cms-attr="href:story.manifesto.cta2_href">Conocer el compromiso</a>
           </div>
         </div>
       </section>

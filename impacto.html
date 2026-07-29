@@ -19,21 +19,21 @@
     <header data-site-header></header>
 
     <main id="main" class="page">
-      <section class="page-hero page-hero--dark">
-        <p class="eyebrow eyebrow--light">Compromiso</p>
-        <h1 class="page-hero__title page-hero__title--light">Vestir también puede ayudar.</h1>
-        <p class="page-hero__lead page-hero__lead--light">
+      <section class="page-hero page-hero--dark" data-cms-section="impact.hero">
+        <p class="eyebrow eyebrow--light" data-cms-text="impact.hero.eyebrow">Compromiso</p>
+        <h1 class="page-hero__title page-hero__title--light" data-cms-text="impact.hero.title">Vestir también puede ayudar.</h1>
+        <p class="page-hero__lead page-hero__lead--light" data-cms-text="impact.hero.lead">
           La ayuda solo tiene sentido cuando se hace con respeto, claridad y responsabilidad.
           Por eso Juntos Siempre comunicará cada aportación real con información verificable:
           destino, entidad, importe, fecha y propósito.
         </p>
       </section>
 
-      <section class="section impact-intro">
+      <section class="section impact-intro" data-cms-section="impact.intro">
         <div class="impact-intro__inner" data-anim>
-          <p class="eyebrow">Qué significa el compromiso</p>
-          <h2 class="section__title">Una intención clara, sin promesas vacías.</h2>
-          <p class="section__lead">
+          <p class="eyebrow" data-cms-text="impact.intro.eyebrow">Qué significa el compromiso</p>
+          <h2 class="section__title" data-cms-text="impact.intro.title">Una intención clara, sin promesas vacías.</h2>
+          <p class="section__lead" data-cms-text="impact.intro.lead">
             Juntos Siempre nace con el compromiso de destinar una parte fija de sus beneficios
             a ayuda ante emergencias y catástrofes. Es un punto de partida honesto: hablamos en
             futuro porque preferimos demostrarlo con hechos antes que adornarlo con cifras.
@@ -41,7 +41,7 @@
         </div>
       </section>
 
-      <section class="section impact-steps">
+      <section class="section impact-steps" data-cms-section="impact.steps">
         <ol class="impact-steps__list" data-anim-group>
           <li class="impact-step">
             <span class="impact-step__num">01</span>
@@ -66,36 +66,36 @@
         </ol>
       </section>
 
-      <section class="section impact-soon">
+      <section class="section impact-soon" data-cms-section="impact.soon">
         <div class="impact-soon__card" data-anim>
-          <p class="eyebrow">Próximamente</p>
-          <h2 class="section__title">Informes verificables</h2>
-          <p class="section__lead">
+          <p class="eyebrow" data-cms-text="impact.soon.eyebrow">Próximamente</p>
+          <h2 class="section__title" data-cms-text="impact.soon.title">Informes verificables</h2>
+          <p class="section__lead" data-cms-text="impact.soon.lead">
             Aquí publicaremos los informes de impacto cuando existan acciones reales. Hasta
             entonces, preferimos no mostrar datos que no podamos respaldar.
           </p>
           <ul class="impact-soon__list">
-            <li><i data-lucide="check"></i> Sin contadores ni porcentajes ficticios.</li>
-            <li><i data-lucide="check"></i> Sin imágenes dramáticas como reclamo.</li>
-            <li><i data-lucide="check"></i> Con trazabilidad y contexto en cada aportación.</li>
+            <li><i data-lucide="check"></i> <span data-cms-text="impact.soon.item1">Sin contadores ni porcentajes ficticios.</span></li>
+            <li><i data-lucide="check"></i> <span data-cms-text="impact.soon.item2">Sin imágenes dramáticas como reclamo.</span></li>
+            <li><i data-lucide="check"></i> <span data-cms-text="impact.soon.item3">Con trazabilidad y contexto en cada aportación.</span></li>
           </ul>
         </div>
       </section>
 
-      <section class="section newsletter">
+      <section class="section newsletter" data-cms-section="impact.newsletter">
         <div class="newsletter__inner" data-anim>
           <div class="newsletter__copy">
-            <p class="eyebrow">Mantente al día</p>
-            <h2 class="section__title">Te avisaremos cuando haya novedades.</h2>
-            <p class="section__lead">Suscríbete para conocer las primeras aportaciones y los informes cuando se publiquen.</p>
+            <p class="eyebrow" data-cms-text="impact.newsletter.eyebrow">Mantente al día</p>
+            <h2 class="section__title" data-cms-text="impact.newsletter.title">Te avisaremos cuando haya novedades.</h2>
+            <p class="section__lead" data-cms-text="impact.newsletter.lead">Suscríbete para conocer las primeras aportaciones y los informes cuando se publiquen.</p>
           </div>
           <form class="newsletter__form" data-newsletter novalidate>
             <div class="newsletter__fields">
-              <label class="field"><span class="sr-only">Nombre</span><input type="text" name="name" placeholder="Nombre" required autocomplete="name" /></label>
-              <label class="field"><span class="sr-only">Email</span><input type="email" name="email" placeholder="Email" required autocomplete="email" /></label>
-              <button class="btn btn--primary" type="submit">Suscribirme</button>
+              <label class="field"><span class="sr-only">Nombre</span><input type="text" name="name" placeholder="Nombre" required autocomplete="name" data-cms-attr="placeholder:impact.newsletter.name_placeholder" /></label>
+              <label class="field"><span class="sr-only">Email</span><input type="email" name="email" placeholder="Email" required autocomplete="email" data-cms-attr="placeholder:impact.newsletter.email_placeholder" /></label>
+              <button class="btn btn--primary" type="submit" data-cms-text="impact.newsletter.button">Suscribirme</button>
             </div>
-            <label class="checkbox"><input type="checkbox" name="accept" required /><span>Acepto recibir comunicaciones de Juntos Siempre.</span></label>
+            <label class="checkbox"><input type="checkbox" name="accept" required /><span data-cms-text="impact.newsletter.consent">Acepto recibir comunicaciones de Juntos Siempre.</span></label>
             <p class="form-feedback" data-newsletter-msg role="status"></p>
           </form>
         </div>

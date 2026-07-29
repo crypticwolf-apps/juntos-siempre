@@ -19,16 +19,16 @@
     <header data-site-header></header>
 
     <main id="main" class="page">
-      <section class="page-hero">
-        <p class="eyebrow">Tienda</p>
+      <section class="page-hero" data-cms-section="shop.header">
+        <p class="eyebrow" data-cms-text="shop.header.eyebrow">Tienda</p>
         <h1 class="page-hero__title" data-shop-title>Colección</h1>
-        <p class="page-hero__lead">Prendas limpias, colores sobrios y el bordado siempre cerca del corazón.</p>
+        <p class="page-hero__lead" data-cms-text="shop.header.lead">Prendas limpias, colores sobrios y el bordado siempre cerca del corazón.</p>
       </section>
 
       <section class="shop">
         <div class="shop__bar">
           <button class="shop__filter-toggle btn btn--outline btn--sm" type="button" data-filter-toggle aria-expanded="false" aria-controls="filters">
-            <i data-lucide="sliders-horizontal"></i> Filtrar y ordenar
+            <i data-lucide="sliders-horizontal"></i> <span data-cms-text="shop.filters.toggle">Filtrar y ordenar</span>
           </button>
           <p class="shop__count" data-shop-count aria-live="polite"></p>
           <label class="shop__sort">
@@ -41,12 +41,12 @@
           <div class="filters-overlay" data-filters-overlay hidden></div>
           <aside class="filters" id="filters" data-filters aria-label="Filtros del catálogo">
             <div class="filters__head">
-              <h2 class="filters__title">Filtrar y ordenar</h2>
+              <h2 class="filters__title" data-cms-text="shop.filters.panel_title">Filtrar y ordenar</h2>
               <button class="icon-btn" type="button" data-filters-close aria-label="Cerrar filtros"><i data-lucide="x"></i></button>
             </div>
             <div class="filters__groups" data-filter-groups></div>
             <div class="filters__foot">
-              <button class="btn btn--primary btn--full" type="button" data-filters-apply>Ver resultados</button>
+              <button class="btn btn--primary btn--full" type="button" data-filters-apply data-cms-text="shop.filters.apply">Ver resultados</button>
             </div>
           </aside>
 
@@ -54,8 +54,8 @@
             <div class="product-grid" data-product-grid></div>
             <div class="empty-state" data-shop-empty hidden>
               <i data-lucide="search-x"></i>
-              <p>No hay prendas con estos filtros.</p>
-              <button class="btn btn--outline" type="button" data-clear-filters>Quitar filtros</button>
+              <p data-cms-text="shop.empty.text">No hay prendas con estos filtros.</p>
+              <button class="btn btn--outline" type="button" data-clear-filters data-cms-text="shop.empty.button">Quitar filtros</button>
             </div>
           </div>
         </div>

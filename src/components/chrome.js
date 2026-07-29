@@ -15,31 +15,64 @@ import {
   BRAND_SLOGAN,
   getColor,
 } from '../data/products.js';
-import { SHOP_CATEGORIES, searchProducts, categoryHref } from '../modules/catalog.js';
+import { shopCategories, searchProducts, categoryHref } from '../modules/catalog.js';
+import { settings, resolveImage } from '../lib/content.js';
 import {
   openCheckout, openAuth, openAccount, openSizeGuide,
 } from '../modules/modals.js';
 
 import logoBlanco from '../assets/logo/logo-blanco.png';
 
-const NAV_LINKS = [
-  { label: 'Historia', href: 'historia.html' },
-  { label: 'Contacto', href: 'contacto.html' },
+// Enlaces del menú por defecto. Se pueden cambiar, ordenar y ocultar desde
+// "Configuración" del panel; entonces llegan por settings('nav', 'links').
+const DEFAULT_NAV_LINKS = [
+  { label: 'Historia', href: 'historia.html', visible: true, mega: false },
+  { label: 'Contacto', href: 'contacto.html', visible: true, mega: false },
 ];
 const productHref = (id) => `producto.html?id=${encodeURIComponent(id)}`;
+
+const esc = (s) =>
+  String(s ?? '').replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
+  );
+
+/** Enlaces del menú principal, sin el de Tienda (que lleva el mega menú). */
+function navLinks() {
+  const stored = settings('nav', 'links', null);
+  if (!Array.isArray(stored) || !stored.length) return DEFAULT_NAV_LINKS;
+  return stored.filter((l) => l && l.visible !== false && !l.mega);
+}
+
+/** El enlace de Tienda, que abre el mega menú. */
+function shopLink() {
+  const stored = settings('nav', 'links', null);
+  const found = Array.isArray(stored) ? stored.find((l) => l && l.mega) : null;
+  return found || { label: 'Tienda', href: 'tienda.html' };
+}
 
 // ---------------------------------------------------------------------------
 // MARKUP
 // ---------------------------------------------------------------------------
 function headerHTML() {
-  const megaCats = SHOP_CATEGORIES.map((c) =>
+  const megaCats = shopCategories().map((c) =>
     `<a class="mega__item" href="${categoryHref(c.id)}">
-       <img src="${c.image}" alt="" loading="lazy" decoding="async" />
-       <span>${c.label}</span>
+       <img src="${esc(c.image)}" alt="" loading="lazy" decoding="async" />
+       <span>${esc(c.label)}</span>
      </a>`
   ).join('');
 
-  const navLinks = NAV_LINKS.map((l) => `<li><a class="site-nav__link" href="${l.href}">${l.label}</a></li>`).join('');
+  const navLinksHTML = navLinks()
+    .map((l) => `<li><a class="site-nav__link" href="${esc(l.href)}">${esc(l.label)}</a></li>`)
+    .join('');
+
+  const shop = shopLink();
+  const brandName = settings('brand', 'name', 'Juntos Siempre');
+  const logo = resolveImage(settings('brand', 'logo', '')) || logoBlanco;
+
+  const megaExtra = (settings('nav', 'mega_links', null) || [
+    { label: 'Novedades', href: 'tienda.html?sort=new' },
+    { label: 'Ver todo', href: 'tienda.html' },
+  ]).map((l) => `<a href="${esc(l.href)}">${esc(l.label)}</a>`).join('');
 
   return `
   <div class="site-header__inner">
@@ -47,32 +80,29 @@ function headerHTML() {
       <i data-lucide="menu"></i>
     </button>
 
-    <a class="site-header__logo" href="index.html" aria-label="Juntos Siempre — inicio">
-      <img src="${logoBlanco}" alt="Juntos Siempre" width="1570" height="664" />
+    <a class="site-header__logo" href="index.html" aria-label="${esc(brandName)} — inicio">
+      <img src="${esc(logo)}" alt="${esc(brandName)}" width="1570" height="664" />
     </a>
 
     <nav class="site-nav" id="site-nav" data-nav aria-label="Navegación principal">
       <div class="site-nav__head">
-        <span class="site-nav__brand">Juntos Siempre</span>
+        <span class="site-nav__brand">${esc(brandName)}</span>
         <button class="site-nav__close icon-btn" type="button" data-nav-close aria-label="Cerrar menú"><i data-lucide="x"></i></button>
       </div>
       <ul class="site-nav__list">
         <li class="has-mega" data-mega-wrap>
           <span class="site-nav__mega-trigger">
-            <a class="site-nav__link" href="tienda.html">Tienda</a>
-            <button class="site-nav__chevron" type="button" data-mega-toggle aria-expanded="false" aria-controls="mega-tienda" aria-label="Abrir menú de Tienda">
+            <a class="site-nav__link" href="${esc(shop.href)}">${esc(shop.label)}</a>
+            <button class="site-nav__chevron" type="button" data-mega-toggle aria-expanded="false" aria-controls="mega-tienda" aria-label="Abrir menú de ${esc(shop.label)}">
               <i data-lucide="chevron-down" aria-hidden="true"></i>
             </button>
           </span>
           <div class="mega" id="mega-tienda" data-mega hidden>
             <div class="mega__grid">${megaCats}</div>
-            <div class="mega__links">
-              <a href="tienda.html?sort=new">Novedades</a>
-              <a href="tienda.html">Ver todo</a>
-            </div>
+            <div class="mega__links">${megaExtra}</div>
           </div>
         </li>
-        ${navLinks}
+        ${navLinksHTML}
       </ul>
     </nav>
 
@@ -88,41 +118,78 @@ function headerHTML() {
   </div>`;
 }
 
+const DEFAULT_BRAND_LINKS = [
+  { label: 'Historia', href: 'historia.html' },
+  { label: 'Compromiso', href: 'impacto.html' },
+  { label: 'Contacto', href: 'contacto.html' },
+  { label: 'Regalar', href: 'index.html#regalo' },
+];
+const DEFAULT_HELP_LINKS = [
+  { label: 'Guía de tallas', href: 'guia-tallas.html' },
+  { label: 'Envíos y devoluciones', href: 'envios-devoluciones.html' },
+  { label: 'Privacidad', href: 'politica-privacidad.html' },
+  { label: 'Términos', href: 'terminos-condiciones.html' },
+  { label: 'Cookies', href: 'cookies.html' },
+];
+
+const linkList = (items) =>
+  items.map((l) => `<li><a href="${esc(l.href)}">${esc(l.label)}</a></li>`).join('');
+
 function footerHTML() {
-  const shopLinks = SHOP_CATEGORIES.map((c) => `<li><a href="${categoryHref(c.id)}">${c.label}</a></li>`).join('');
+  const shopLinks = shopCategories()
+    .map((c) => `<li><a href="${categoryHref(c.id)}">${esc(c.label)}</a></li>`)
+    .join('');
+
+  const brandName = settings('brand', 'name', 'Juntos Siempre');
+  const logo = resolveImage(settings('brand', 'logo', '')) || logoBlanco;
+  const slogan = settings('footer', 'slogan', BRAND_SLOGAN);
+  const note = settings('footer', 'note', 'Web de demostración · sin pagos reales');
+  const copyright = settings('footer', 'copyright', brandName);
+  const brandLinks = settings('footer', 'brand_links', null) || DEFAULT_BRAND_LINKS;
+  const helpLinks = settings('footer', 'help_links', null) || DEFAULT_HELP_LINKS;
+
+  const social = settings('social', null, {}) || {};
+  const socialItems = [
+    ['instagram', 'Instagram', social.instagram],
+    ['tiktok', 'TikTok', social.tiktok],
+    ['facebook', 'Facebook', social.facebook],
+  ].filter(([, , href]) => href);
+  const socialHTML = socialItems.length
+    ? `<div class="footer__social">${socialItems
+        .map(
+          ([key, label, href]) =>
+            `<a href="${esc(href)}" aria-label="${esc(label)}" rel="noopener noreferrer" target="_blank" data-social="${key}">${esc(label)}</a>`
+        )
+        .join('')}</div>`
+    : '';
+  const emailHTML = social.email
+    ? `<p class="footer__email"><a href="mailto:${esc(social.email)}">${esc(social.email)}</a></p>`
+    : '';
+
   return `
   <div class="footer__inner">
     <div class="footer__brand">
-      <img src="${logoBlanco}" alt="Juntos Siempre" class="footer__logo" width="1570" height="664" />
-      <p class="footer__slogan">${BRAND_SLOGAN}</p>
+      <img src="${esc(logo)}" alt="${esc(brandName)}" class="footer__logo" width="1570" height="664" />
+      <p class="footer__slogan">${esc(slogan)}</p>
+      ${emailHTML}
+      ${socialHTML}
     </div>
-    <nav class="footer__col" aria-label="Tienda">
-      <h2>Tienda</h2>
+    <nav class="footer__col" aria-label="${esc(settings('footer', 'col_shop_title', 'Tienda'))}">
+      <h2>${esc(settings('footer', 'col_shop_title', 'Tienda'))}</h2>
       <ul><li><a href="tienda.html">Ver todo</a></li>${shopLinks}</ul>
     </nav>
-    <nav class="footer__col" aria-label="Marca">
-      <h2>Marca</h2>
-      <ul>
-        <li><a href="historia.html">Historia</a></li>
-        <li><a href="impacto.html">Compromiso</a></li>
-        <li><a href="contacto.html">Contacto</a></li>
-        <li><a href="index.html#regalo">Regalar</a></li>
-      </ul>
+    <nav class="footer__col" aria-label="${esc(settings('footer', 'col_brand_title', 'Marca'))}">
+      <h2>${esc(settings('footer', 'col_brand_title', 'Marca'))}</h2>
+      <ul>${linkList(brandLinks)}</ul>
     </nav>
-    <nav class="footer__col" aria-label="Ayuda">
-      <h2>Ayuda</h2>
-      <ul>
-        <li><a href="guia-tallas.html">Guía de tallas</a></li>
-        <li><a href="envios-devoluciones.html">Envíos y devoluciones</a></li>
-        <li><a href="politica-privacidad.html">Privacidad</a></li>
-        <li><a href="terminos-condiciones.html">Términos</a></li>
-        <li><a href="cookies.html">Cookies</a></li>
-      </ul>
+    <nav class="footer__col" aria-label="${esc(settings('footer', 'col_help_title', 'Ayuda'))}">
+      <h2>${esc(settings('footer', 'col_help_title', 'Ayuda'))}</h2>
+      <ul>${linkList(helpLinks)}</ul>
     </nav>
   </div>
   <div class="footer__bottom">
-    <p>© <span data-year></span> Juntos Siempre</p>
-    <p class="footer__demo">Web de demostración · sin pagos reales</p>
+    <p>© <span data-year></span> ${esc(copyright)}</p>
+    <p class="footer__demo">${esc(note)}</p>
   </div>`;
 }
 

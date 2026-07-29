@@ -1,0 +1,199 @@
+/* ===========================================================================
+   MODO "EDITAR PÁGINA VISUALMENTE"
+   Se superpone a la web real sin alterar su diseño. Solo se carga cuando se
+   entra con ?editar=1 y hay una sesión con permiso.
+   =========================================================================== */
+
+body.ve-on { padding-bottom: 92px; }
+
+/* --------------------------------------------------------------- RESALTES -- */
+.ve-on [data-ve-editable] {
+  outline: 1px dashed rgba(176, 122, 78, 0.55);
+  outline-offset: 3px;
+  cursor: pointer;
+  transition: outline-color 0.14s ease, background 0.14s ease;
+  position: relative;
+}
+.ve-on [data-ve-editable]:hover {
+  outline: 2px solid #b07a4e;
+  background: rgba(176, 122, 78, 0.08);
+}
+.ve-on [data-ve-editable].is-editing {
+  outline: 2px solid #2f7d5d;
+  background: rgba(47, 125, 93, 0.09);
+}
+
+.ve-pencil {
+  position: absolute;
+  top: -12px;
+  left: -12px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #b07a4e;
+  color: #fff;
+  font-size: 13px;
+  display: grid;
+  place-items: center;
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.14s ease;
+}
+.ve-on [data-ve-editable]:hover > .ve-pencil { opacity: 1; }
+
+/* --------------------------------------------------------------- SECCIONES -- */
+.ve-on [data-cms-section] { position: relative; }
+.ve-section-bar {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 20;
+  display: flex;
+  gap: 4px;
+  background: rgba(14, 14, 13, 0.9);
+  border-radius: 8px;
+  padding: 4px;
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+.ve-on [data-cms-section]:hover > .ve-section-bar { opacity: 1; }
+.ve-section-bar button {
+  color: #f4f1ea;
+  font-size: 12px;
+  padding: 5px 9px;
+  border-radius: 5px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.ve-section-bar button:hover { background: rgba(244, 241, 234, 0.18); }
+
+.ve-on [data-cms-section][data-ve-hidden] {
+  display: block !important;
+  opacity: 0.4;
+  filter: grayscale(1);
+  position: relative;
+}
+.ve-hidden-note {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 15;
+  pointer-events: none;
+}
+.ve-hidden-note span {
+  background: #0e0e0d;
+  color: #f4f1ea;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-family: system-ui, sans-serif;
+}
+
+/* ------------------------------------------------------------------ PANEL -- */
+.ve-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 92px;
+  width: min(380px, 92vw);
+  background: #f4f1ea;
+  color: #232220;
+  z-index: 10000;
+  box-shadow: -12px 0 40px rgba(14, 14, 13, 0.22);
+  display: flex;
+  flex-direction: column;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  transform: translateX(100%);
+  transition: transform 0.22s ease;
+}
+.ve-panel.is-open { transform: none; }
+.ve-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.15rem;
+  border-bottom: 1px solid #e3ddd0;
+}
+.ve-panel__head h2 { font-size: 1rem; margin: 0; font-weight: 600; }
+.ve-panel__body { padding: 1.15rem; overflow-y: auto; flex: 1; }
+.ve-panel__label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+.ve-panel textarea,
+.ve-panel input[type='text'] {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #e3ddd0;
+  border-radius: 6px;
+  background: #fff;
+  font: inherit;
+  font-size: 0.95rem;
+}
+.ve-panel textarea { min-height: 130px; resize: vertical; line-height: 1.55; }
+.ve-panel__hint { font-size: 0.8rem; color: #6f6a60; margin-top: 0.5rem; }
+.ve-panel__img { width: 100%; border-radius: 8px; margin-bottom: 0.75rem; background: #efe9dd; }
+
+/* ------------------------------------------------------------------ BARRA -- */
+.ve-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10001;
+  background: #0e0e0d;
+  color: #f4f1ea;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 1rem;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.9rem;
+}
+.ve-bar__brand { font-weight: 600; margin-right: 0.5rem; }
+.ve-bar__state { color: #cdbb9c; margin-right: auto; font-size: 0.85rem; }
+.ve-btn {
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  border: 1px solid rgba(244, 241, 234, 0.28);
+  color: #f4f1ea;
+  min-height: 42px;
+  white-space: nowrap;
+}
+.ve-btn:hover { background: rgba(244, 241, 234, 0.12); }
+.ve-btn--primary { background: #f4f1ea; color: #0e0e0d; border-color: #f4f1ea; font-weight: 600; }
+.ve-btn--primary:hover { background: #fff; }
+.ve-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ve-sizes { display: flex; gap: 0.3rem; }
+.ve-sizes button { padding: 0.5rem 0.7rem; font-size: 0.85rem; }
+
+.ve-gate {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 14, 13, 0.94);
+  color: #f4f1ea;
+  z-index: 10002;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  text-align: center;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+.ve-gate h1 { font-size: 1.3rem; margin-bottom: 0.75rem; }
+.ve-gate p { max-width: 40ch; margin: 0 auto 1.25rem; color: #cdbb9c; }
+
+@media (max-width: 700px) {
+  .ve-panel { bottom: 0; top: auto; height: 65vh; width: 100%; border-radius: 16px 16px 0 0; transform: translateY(100%); }
+  .ve-panel.is-open { transform: none; }
+  .ve-bar { padding-bottom: max(0.8rem, env(safe-area-inset-bottom)); }
+  .ve-bar__state { width: 100%; margin: 0 0 0.25rem; }
+  .ve-sizes { display: none; }
+}

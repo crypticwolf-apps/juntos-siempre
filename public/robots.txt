@@ -1,4 +1,8 @@
 User-agent: *
 Allow: /
 
+# Zona privada de gestión: no debe aparecer en buscadores.
+Disallow: /admin
+Disallow: /admin.html
+
 Sitemap: sitemap.xml

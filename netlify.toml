@@ -1,6 +1,104 @@
+# ============================================================================
+# Juntos Siempre — configuración de Netlify
+#
+# Las claves NO se escriben aquí. Se añaden en:
+#   Netlify -> Site configuration -> Environment variables
+#     VITE_SUPABASE_URL
+#     VITE_SUPABASE_ANON_KEY
+# ============================================================================
+
 [build]
   command = "npm run build"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "20"
+
+# ----------------------------------------------------------------------------
+# DIRECCIONES LIMPIAS
+# Permite entrar en /admin, /tienda, /historia… sin escribir ".html"
+# y evita el error 404 de Netlify al abrirlas directamente.
+# ----------------------------------------------------------------------------
+[[redirects]]
+  from = "/admin"
+  to = "/admin.html"
+  status = 200
+
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin.html"
+  status = 200
+
+[[redirects]]
+  from = "/tienda"
+  to = "/tienda.html"
+  status = 200
+
+[[redirects]]
+  from = "/producto"
+  to = "/producto.html"
+  status = 200
+
+[[redirects]]
+  from = "/historia"
+  to = "/historia.html"
+  status = 200
+
+[[redirects]]
+  from = "/impacto"
+  to = "/impacto.html"
+  status = 200
+
+[[redirects]]
+  from = "/contacto"
+  to = "/contacto.html"
+  status = 200
+
+[[redirects]]
+  from = "/guia-tallas"
+  to = "/guia-tallas.html"
+  status = 200
+
+[[redirects]]
+  from = "/envios-devoluciones"
+  to = "/envios-devoluciones.html"
+  status = 200
+
+[[redirects]]
+  from = "/politica-privacidad"
+  to = "/politica-privacidad.html"
+  status = 200
+
+[[redirects]]
+  from = "/terminos-condiciones"
+  to = "/terminos-condiciones.html"
+  status = 200
+
+[[redirects]]
+  from = "/cookies"
+  to = "/cookies.html"
+  status = 200
+
+# ----------------------------------------------------------------------------
+# CABECERAS DE SEGURIDAD
+# ----------------------------------------------------------------------------
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=(), payment=()"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+
+# El panel no debe aparecer en buscadores.
+[[headers]]
+  for = "/admin*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+# Los archivos con huella en el nombre se pueden guardar mucho tiempo.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

@@ -15,12 +15,21 @@ import { $, $$, el, euros, refreshIcons } from './utils.js';
 import { applyFilters, facets, SORTS, defaultFilters } from './filters.js';
 import { animateIn, refreshScroll } from './animations.js';
 
-const SHOP_CATEGORY_IDS = ['camisetas', 'sudaderas', 'gorras', 'accesorios'];
-export const SHOP_CATEGORIES = CATEGORIES.filter((c) => SHOP_CATEGORY_IDS.includes(c.id));
-export const SHOP_PRODUCTS = PRODUCTS.filter((p) => SHOP_CATEGORY_IDS.includes(p.category));
+// Las categorías y los productos se leen en el momento de dibujar, porque el
+// catálogo puede venir del gestor de contenido (ver setCatalog en products.js).
+const shopCategoryIds = () => CATEGORIES.map((c) => c.id);
+export const shopCategories = () => CATEGORIES;
+export const shopProducts = () => PRODUCTS.filter((p) => shopCategoryIds().includes(p.category));
 
-// Productos destacados para la home (orden de prioridad del encargo).
-const FEATURED_IDS = ['camiseta-essential', 'sudadera-crew', 'gorra', 'tote-bag'];
+// Productos destacados para la home: los marcados desde el panel y, si no hay
+// ninguno marcado, los cuatro primeros del catálogo.
+const FALLBACK_FEATURED_IDS = ['camiseta-essential', 'sudadera-crew', 'gorra', 'tote-bag'];
+function featuredProducts() {
+  const marked = PRODUCTS.filter((p) => p.isFeatured);
+  if (marked.length) return marked;
+  const byId = FALLBACK_FEATURED_IDS.map((id) => PRODUCTS.find((p) => p.id === id)).filter(Boolean);
+  return byId.length ? byId : PRODUCTS.slice(0, 4);
+}
 const productHref = (id) => `producto.html?id=${encodeURIComponent(id)}`;
 export const categoryHref = (id) => `tienda.html?categoria=${id}`;
 
@@ -91,7 +100,7 @@ export function renderProductCard(product, { featured = false } = {}) {
 export function mountHomeCollections() {
   const host = $('[data-categories]');
   if (!host) return;
-  const cats = SHOP_CATEGORIES; // Camisetas, Sudaderas, Gorras, Accesorios
+  const cats = shopCategories();
   host.innerHTML = '';
   cats.forEach((c) => {
     const n = countByCategory(c.id);
@@ -112,7 +121,7 @@ export function mountHomeCollections() {
 export function mountFeatured() {
   const host = $('[data-featured]');
   if (!host) return;
-  const list = FEATURED_IDS.map((id) => PRODUCTS.find((p) => p.id === id)).filter(Boolean);
+  const list = featuredProducts();
   host.innerHTML = '';
   list.forEach((p) => host.appendChild(renderProductCard(p, { featured: true })));
   refreshIcons();
@@ -138,14 +147,14 @@ export function mountShop() {
     history.replaceState({}, '', 'tienda.html');
     cat = null;
   }
-  if (cat && SHOP_CATEGORY_IDS.includes(cat)) state.category = cat;
+  if (cat && shopCategoryIds().includes(cat)) state.category = cat;
   // ?sort=new desde "Novedades"
   const sortParam = params.get('sort');
   if (sortParam && SORTS[sortParam]) state.sort = sortParam;
 
   function updateHeading() {
     if (!titleHost) return;
-    const c = SHOP_CATEGORIES.find((x) => x.id === state.category);
+    const c = shopCategories().find((x) => x.id === state.category);
     titleHost.textContent = c ? c.label : 'Colección';
   }
 
@@ -166,7 +175,7 @@ export function mountShop() {
   }
 
   function renderGrid() {
-    const list = applyFilters(SHOP_PRODUCTS, state);
+    const list = applyFilters(shopProducts(), state);
     gridHost.innerHTML = '';
     list.forEach((p) => gridHost.appendChild(renderProductCard(p)));
     if (countHost) countHost.textContent = `${list.length} ${list.length === 1 ? 'prenda' : 'prendas'}`;
@@ -185,12 +194,12 @@ export function mountShop() {
   function renderFilters() {
     const host = $('[data-filter-groups]') || $('[data-filters]');
     if (!host) return;
-    const fac = facets(SHOP_PRODUCTS);
+    const fac = facets(shopProducts());
 
     const catGroup = el('div', { class: 'filter-group' }, [
       el('h3', { class: 'filter-group__title', text: 'Categoría' }),
       el('div', { class: 'filter-cats' },
-        [{ id: 'all', label: 'Todo' }, ...SHOP_CATEGORIES].map((c) =>
+        [{ id: 'all', label: 'Todo' }, ...shopCategories()].map((c) =>
           el('button', {
             class: 'filter-chip' + (state.category === c.id ? ' is-active' : ''),
             type: 'button', 'data-cat': c.id, text: c.label,
@@ -323,7 +332,7 @@ export function mountShop() {
   window.addEventListener('popstate', () => {
     const p = new URLSearchParams(location.search);
     const c = p.get('categoria') || 'all';
-    setCategory(SHOP_CATEGORY_IDS.includes(c) ? c : 'all', { push: false });
+    setCategory(shopCategoryIds().includes(c) ? c : 'all', { push: false });
   });
 
   const clearEmpty = $('[data-clear-filters]');
@@ -336,5 +345,5 @@ export function mountShop() {
 export function searchProducts(query) {
   const q = query.trim().toLowerCase();
   if (!q) return [];
-  return SHOP_PRODUCTS.filter((p) => `${p.name} ${p.shortDesc} ${p.category}`.toLowerCase().includes(q));
+  return shopProducts().filter((p) => `${p.name} ${p.shortDesc} ${p.category}`.toLowerCase().includes(q));
 }

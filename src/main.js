@@ -23,6 +23,10 @@ import { mountHomeCollections, mountFeatured, mountShop } from './modules/catalo
 import { mountProductPage } from './modules/product-page.js';
 import { initAnimations } from './modules/animations.js';
 import { initSeo } from './modules/seo.js';
+import { loadContent, applyContent } from './lib/content.js';
+import { loadRemoteCatalog } from './lib/remote-catalog.js';
+import { setCatalog } from './data/products.js';
+import { mountChapters, mountImpactSteps } from './lib/repeaters.js';
 
 // ---------------------------------------------------------------------------
 // FORMULARIOS
@@ -128,7 +132,21 @@ function wireAccordions() {
 // ---------------------------------------------------------------------------
 // INIT
 // ---------------------------------------------------------------------------
-function init() {
+/**
+ * Arranque.
+ *
+ * Primero se piden los textos y el catálogo publicados desde el panel. Si no
+ * hay conexión configurada, ambas llamadas devuelven vacío al instante y la
+ * web se dibuja con su contenido original, exactamente igual que antes.
+ */
+async function init() {
+  document.body.classList.add('is-loading-content');
+
+  const [, remote] = await Promise.all([loadContent(), loadRemoteCatalog()]);
+  if (remote) setCatalog(remote);
+
+  document.body.classList.remove('is-loading-content');
+
   initSeo();
   mountChrome();
   initChrome();
@@ -141,7 +159,14 @@ function init() {
     mountShop();
   } else if (page === 'product') {
     mountProductPage();
+  } else if (page === 'story') {
+    mountChapters();
+  } else if (page === 'impact') {
+    mountImpactSteps();
   }
+
+  // Los textos e imágenes guardados se aplican encima del contenido original.
+  applyContent(document);
 
   initFavicon();
   wireNewsletter();
@@ -149,6 +174,13 @@ function init() {
   wireAccordions();
   initAnimations();
   refreshIcons();
+
+  // Modo "Editar página visualmente": solo se descarga si se pide.
+  if (new URLSearchParams(location.search).has('editar')) {
+    import('./editor/visual-editor.js')
+      .then((m) => m.startVisualEditor())
+      .catch(() => {});
+  }
 }
 
 if (document.readyState === 'loading') {

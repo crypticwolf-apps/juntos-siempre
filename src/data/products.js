@@ -20,7 +20,10 @@ import etiquetaRegalo from '../assets/packaging/etiqueta-regalo.jpg';
 import etiquetaCuello from '../assets/packaging/etiqueta-cuello.jpg';
 import sudaderaPackaging from '../assets/packaging/sudadera-packaging.jpg';
 
-export const COLORS = {
+// Estos datos son la versión original de la web y siguen siendo los que se
+// muestran si todavía no hay catálogo publicado en el gestor de contenido.
+// `setCatalog()` los sustituye cuando sí lo hay.
+export let COLORS = {
   negro: { id: 'negro', name: 'Negro', hex: '#1c1c1c' },
   'blanco-roto': { id: 'blanco-roto', name: 'Blanco roto', hex: '#f3efe6' },
   arena: { id: 'arena', name: 'Arena', hex: '#d8c5a4' },
@@ -31,7 +34,7 @@ export const COLORS = {
   craft: { id: 'craft', name: 'Kraft', hex: '#c4a373' },
 };
 
-export const CATEGORIES = [
+export let CATEGORIES = [
   { id: 'camisetas', label: 'Camisetas', image: camNegraUrbano },
   { id: 'sudaderas', label: 'Sudaderas', image: sudBeigeFamilia },
   { id: 'gorras', label: 'Gorras', image: gorraNegra },
@@ -82,7 +85,7 @@ const CARE_NOTE =
 const SHIPPING_NOTE =
   'Checkout de demostración. Envíos, cambios y devoluciones se definirán antes de una venta real.';
 
-export const PRODUCTS = [
+export let PRODUCTS = [
   {
     id: 'camiseta-essential',
     name: 'Camiseta Essential',
@@ -282,6 +285,16 @@ export const PRODUCTS = [
 export const GIFT_BOX_ID = 'caja-regalo';
 export const BRAND_SLOGAN = 'Luchar JUNTOS. Ayudarnos SIEMPRE.';
 export const GIFT_MESSAGE_SUGGESTION = BRAND_SLOGAN;
+
+/**
+ * Sustituye el catálogo original por el publicado desde el panel.
+ * Se llama una sola vez al arrancar, antes de dibujar nada.
+ */
+export function setCatalog({ products, categories, colors }) {
+  if (Array.isArray(products) && products.length) PRODUCTS = products;
+  if (Array.isArray(categories) && categories.length) CATEGORIES = categories;
+  if (colors && Object.keys(colors).length) COLORS = colors;
+}
 
 export function getProduct(id) {
   return PRODUCTS.find((p) => p.id === id);

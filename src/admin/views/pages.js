@@ -15,7 +15,7 @@ import {
   el, notify, friendlyError, confirmDialog, openModal, field, input, textarea,
   checkbox, emptyState, setDirty, select,
 } from '../ui.js';
-import { pickImage, IMAGE_SPECS } from '../media.js';
+import { pickImage, recropAndUpload, IMAGE_SPECS } from '../media.js';
 
 // Cada página del gestor se corresponde con un archivo de la web.
 const PAGE_FILES = {
@@ -81,19 +81,35 @@ function fieldsEditor(data, folder, onChange) {
           type: 'button',
           text: 'Cambiar fotografía',
           onClick: async () => {
-            const picked = await pickImage({ folder, title: labelFor(key) });
+            const picked = await pickImage({ folder, title: labelFor(key), aspect: 16 / 9, hint: IMAGE_SPECS.banner });
             if (!picked) return;
             data[key] = picked.url;
             preview.src = picked.url;
+            recropBtn.hidden = false;
             if (picked.alt && `${key}_alt` in data && !data[`${key}_alt`]) data[`${key}_alt`] = picked.alt;
             onChange();
+          },
+        });
+        const recropBtn = el('button', {
+          class: 'adm-btn adm-btn--ghost adm-btn--sm',
+          type: 'button',
+          text: '✂ Encuadrar',
+          hidden: !data[key],
+          onClick: async () => {
+            if (!data[key]) return;
+            const row = await recropAndUpload(resolveImage(data[key]), { folder, aspect: 16 / 9, hint: IMAGE_SPECS.banner });
+            if (!row) return;
+            data[key] = row.url;
+            preview.src = row.url;
+            onChange();
+            notify('Encuadre aplicado', 'success');
           },
         });
         host.appendChild(
           el('div', { class: 'adm-field' }, [
             el('span', { class: 'adm-field__label', text: labelFor(key) }),
             preview,
-            el('div', { style: 'margin-top:.6rem' }, [btn]),
+            el('div', { class: 'adm-actions', style: 'margin-top:.6rem; gap:.5rem' }, [btn, recropBtn]),
             el('span', { class: 'adm-field__hint', text: IMAGE_SPECS.banner }),
           ])
         );

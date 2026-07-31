@@ -214,7 +214,7 @@ export async function uploadImage(file, { folder = 'general', onProgress, crop =
  * @param {string} options.folder
  * @param {(rows:object[])=>void} options.onUploaded
  */
-export function dropZone({ folder = 'general', multiple = true, onUploaded, label = 'Arrastra aquí tus fotografías' }) {
+export function dropZone({ folder = 'general', multiple = true, onUploaded, label = 'Arrastra aquí tus fotografías', crop = false, aspect, hint }) {
   const fileInput = el('input', {
     type: 'file',
     accept: 'image/jpeg,image/png,image/webp,image/avif',
@@ -234,10 +234,22 @@ export function dropZone({ folder = 'general', multiple = true, onUploaded, labe
   const wrapper = el('div', { class: 'adm-drop-wrap' }, [zone, progressList]);
 
   async function handleFiles(files) {
-    const list = Array.from(files).filter((f) => f.type.startsWith('image/'));
+    let list = Array.from(files).filter((f) => f.type.startsWith('image/'));
     if (!list.length) {
       notify('Solo se pueden subir imágenes (JPG, PNG o WebP).', 'error');
       return;
+    }
+
+    // Encuadre opcional antes de subir. Si se cancela un recorte, se omite ese
+    // archivo; "Usar tal cual" mantiene el original.
+    if (crop) {
+      const framed = [];
+      for (const file of list) {
+        const out = await openCropper(file, { aspect, hint });
+        if (out) framed.push(out);
+      }
+      list = framed;
+      if (!list.length) return;
     }
 
     const results = [];
@@ -315,6 +327,244 @@ export function dropZone({ folder = 'general', multiple = true, onUploaded, labe
 }
 
 // ---------------------------------------------------------------------------
+// RECORTADOR (zoom + arrastre) para encuadrar una foto al espacio
+// ---------------------------------------------------------------------------
+const ASPECT_PRESETS = [
+  { id: 'square', label: 'Cuadrada', ratio: 1 },
+  { id: 'portrait', label: 'Producto 4:5', ratio: 4 / 5 },
+  { id: 'landscape', label: 'Banner 16:9', ratio: 16 / 9 },
+  { id: 'wide', label: 'Ancha 2:1', ratio: 2 },
+];
+
+/**
+ * Abre un recuadro para encuadrar la foto: se puede arrastrar y ampliar (con el
+ * dedo en el móvil, con la rueda o el deslizador en el ordenador). Funciona
+ * tanto en el panel como en el modo "editar visualmente".
+ *
+ * @param {File|string} source archivo recién elegido o URL de una foto ya subida
+ * @param {object} opts
+ * @param {number} [opts.aspect] proporción fija ancho/alto (si se omite, se elige)
+ * @param {string} [opts.title]
+ * @param {string} [opts.hint] resolución recomendada, se muestra como ayuda
+ * @param {boolean} [opts.allowAsIs] permite "usar tal cual" (solo con archivo)
+ * @returns {Promise<File|null>} archivo recortado listo para subir, o null
+ */
+export function openCropper(source, { aspect, title = 'Encuadrar la foto', hint, allowAsIs = true } = {}) {
+  return new Promise((resolve) => {
+    let settled = false;
+    let objectUrl = null;
+    const done = (val) => {
+      if (settled) return;
+      settled = true;
+      overlay.remove();
+      document.body.classList.remove('adm-no-scroll');
+      document.removeEventListener('keydown', onKey);
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      resolve(val);
+    };
+    const onKey = (e) => { if (e.key === 'Escape') done(null); };
+
+    const st = { zoom: 1, tx: 0, ty: 0, base: 1, nw: 0, nh: 0, fw: 0, fh: 0, ar: aspect || 4 / 5 };
+
+    const img = el('img', {
+      alt: '',
+      draggable: 'false',
+      style: 'position:absolute; top:0; left:0; transform-origin:0 0; user-select:none; -webkit-user-drag:none; max-width:none;',
+    });
+    img.crossOrigin = 'anonymous';
+
+    const frame = el('div', {
+      style: `position:relative; overflow:hidden; margin:0 auto; background:#000;
+              border-radius:10px; touch-action:none; cursor:grab; box-shadow:0 0 0 1px rgba(255,255,255,.25) inset;`,
+    }, [img]);
+
+    const zoom = el('input', {
+      type: 'range', min: '1', max: '4', step: '0.01', value: '1',
+      'aria-label': 'Ampliar', style: 'width:100%;',
+    });
+
+    const scale = () => st.base * st.zoom;
+    const render = () => {
+      const s = scale();
+      img.style.width = `${st.nw * s}px`;
+      img.style.height = `${st.nh * s}px`;
+      img.style.transform = `translate(${st.tx}px, ${st.ty}px)`;
+    };
+    const clamp = () => {
+      const s = scale();
+      st.tx = Math.min(0, Math.max(st.fw - st.nw * s, st.tx));
+      st.ty = Math.min(0, Math.max(st.fh - st.nh * s, st.ty));
+    };
+    const setZoom = (nz, cx = st.fw / 2, cy = st.fh / 2) => {
+      const s0 = scale();
+      const ix = (cx - st.tx) / s0;
+      const iy = (cy - st.ty) / s0;
+      st.zoom = Math.min(4, Math.max(1, nz));
+      const s1 = scale();
+      st.tx = cx - ix * s1;
+      st.ty = cy - iy * s1;
+      zoom.value = String(st.zoom);
+      clamp();
+      render();
+    };
+
+    const layout = (center = false) => {
+      const maxW = Math.min(560, window.innerWidth - 72);
+      let fw = maxW;
+      let fh = fw / st.ar;
+      const maxH = Math.max(180, window.innerHeight * 0.5);
+      if (fh > maxH) { fh = maxH; fw = fh * st.ar; }
+      st.fw = fw; st.fh = fh;
+      frame.style.width = `${fw}px`;
+      frame.style.height = `${fh}px`;
+      if (!st.nw) return;
+      st.base = Math.max(fw / st.nw, fh / st.nh);
+      if (center) {
+        st.zoom = 1;
+        const s = scale();
+        st.tx = (fw - st.nw * s) / 2;
+        st.ty = (fh - st.nh * s) / 2;
+        zoom.value = '1';
+      }
+      clamp();
+      render();
+    };
+
+    img.onload = () => { st.nw = img.naturalWidth; st.nh = img.naturalHeight; layout(true); };
+    img.onerror = () => { notify('No se ha podido abrir la imagen para recortarla.', 'error'); done(null); };
+    if (typeof source === 'string') {
+      img.src = source;
+    } else {
+      objectUrl = URL.createObjectURL(source);
+      img.src = objectUrl;
+    }
+
+    // --- Arrastre (ratón y dedo) ---
+    let dragging = false;
+    let lastX = 0;
+    let lastY = 0;
+    frame.addEventListener('pointerdown', (e) => {
+      dragging = true; lastX = e.clientX; lastY = e.clientY;
+      frame.style.cursor = 'grabbing';
+      try { frame.setPointerCapture(e.pointerId); } catch { /* algunos punteros no admiten captura */ }
+    });
+    frame.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      st.tx += e.clientX - lastX; st.ty += e.clientY - lastY;
+      lastX = e.clientX; lastY = e.clientY;
+      clamp(); render();
+    });
+    const endDrag = () => { dragging = false; frame.style.cursor = 'grab'; };
+    frame.addEventListener('pointerup', endDrag);
+    frame.addEventListener('pointercancel', endDrag);
+    frame.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const rect = frame.getBoundingClientRect();
+      setZoom(st.zoom * (e.deltaY < 0 ? 1.08 : 0.92), e.clientX - rect.left, e.clientY - rect.top);
+    }, { passive: false });
+    zoom.addEventListener('input', () => setZoom(Number(zoom.value)));
+
+    // --- Selector de proporción (solo si no viene fija) ---
+    let aspectRow = null;
+    if (!aspect) {
+      const buttons = ASPECT_PRESETS.map((p) =>
+        el('button', {
+          class: 'adm-btn adm-btn--ghost adm-btn--sm', type: 'button', text: p.label,
+          'data-ratio': String(p.ratio),
+          onClick: () => {
+            st.ar = p.ratio;
+            aspectRow.querySelectorAll('.adm-btn').forEach((b) => b.classList.remove('adm-btn--primary'));
+            aspectRow.querySelector(`[data-ratio="${p.ratio}"]`)?.classList.add('adm-btn--primary');
+            layout(true);
+          },
+        })
+      );
+      aspectRow = el('div', { class: 'adm-actions', style: 'margin-bottom:.85rem; flex-wrap:wrap' }, buttons);
+    }
+
+    const crop = () => {
+      const s = scale();
+      const sx = -st.tx / s;
+      const sy = -st.ty / s;
+      const sw = st.fw / s;
+      const sh = st.fh / s;
+      const MAX = 1800;
+      const outW = Math.max(1, Math.round(Math.min(sw, MAX)));
+      const outH = Math.max(1, Math.round(outW * (sh / sw)));
+      const canvas = document.createElement('canvas');
+      canvas.width = outW; canvas.height = outH;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingQuality = 'high';
+      try {
+        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
+      } catch (err) {
+        notify('No se ha podido recortar esta imagen (permisos de la foto).', 'error');
+        done(null);
+        return;
+      }
+      const type = supportsType('image/webp') ? 'image/webp' : 'image/jpeg';
+      canvas.toBlob((blob) => {
+        if (!blob) { done(null); return; }
+        const ext = type === 'image/webp' ? 'webp' : 'jpg';
+        done(new File([blob], `recorte-${Date.now()}.${ext}`, { type }));
+      }, type, 0.9);
+    };
+
+    const footer = el('div', { class: 'adm-actions adm-actions--end', style: 'gap:.6rem' }, [
+      el('button', { class: 'adm-btn adm-btn--ghost', type: 'button', text: 'Cancelar', onClick: () => done(null) }),
+      allowAsIs && typeof source !== 'string'
+        ? el('button', { class: 'adm-btn adm-btn--ghost', type: 'button', text: 'Usar tal cual', onClick: () => done(source) })
+        : null,
+      el('button', { class: 'adm-btn adm-btn--primary', type: 'button', text: 'Recortar y usar', onClick: crop }),
+    ]);
+
+    const panel = el('div', {
+      style: `background:var(--crema,#f4f1ea); color:var(--tinta,#232220); border-radius:14px;
+              width:min(640px, 100%); max-height:calc(100vh - 2rem); overflow:auto;
+              padding:clamp(1rem,3vw,1.5rem); box-shadow:0 24px 70px rgba(0,0,0,.4);
+              font-family:var(--sans, system-ui, sans-serif);`,
+    }, [
+      el('h2', { style: 'font-size:1.15rem; margin:0 0 .35rem;', text: title }),
+      el('p', {
+        style: 'font-size:.85rem; color:var(--tinta-suave,#6f6a60); margin:0 0 1rem;',
+        text: 'Arrastra para mover y usa el deslizador (o dos dedos / la rueda) para ampliar. Lo que quede dentro del recuadro es lo que se verá.',
+      }),
+      aspectRow,
+      frame,
+      el('div', { style: 'display:flex; align-items:center; gap:.6rem; margin:.9rem 0 .35rem;' }, [
+        el('span', { 'aria-hidden': 'true', text: '🔍', style: 'font-size:1rem;' }),
+        zoom,
+      ]),
+      hint ? el('p', { class: 'adm-field__hint', style: 'color:var(--tinta-suave,#6f6a60); font-size:.8rem; margin:.35rem 0 0;', text: hint }) : null,
+      el('div', { style: 'margin-top:1.1rem;' }, [footer]),
+    ]);
+
+    const overlay = el('div', {
+      style: `position:fixed; inset:0; background:rgba(14,14,13,.6); z-index:10060;
+              display:grid; place-items:center; padding:1rem; overflow:auto;`,
+      onClick: (e) => { if (e.target === overlay) done(null); },
+    }, [panel]);
+
+    document.body.appendChild(overlay);
+    document.body.classList.add('adm-no-scroll');
+    document.addEventListener('keydown', onKey);
+    window.addEventListener('resize', () => layout(false), { once: false });
+  });
+}
+
+/**
+ * Reencuadra una foto que ya está subida: abre el recortador sobre su URL y,
+ * si se confirma, sube la versión recortada y la devuelve.
+ *
+ * @returns {Promise<{url:string, storage_path?:string, alt?:string}|null>}
+ */
+export async function recropAndUpload(url, { folder = 'general', aspect, hint } = {}) {
+  const file = await openCropper(url, { aspect, hint, allowAsIs: false, title: 'Reencuadrar la foto' });
+  if (!file) return null;
+  return uploadImage(file, { folder });
+}
+
+// ---------------------------------------------------------------------------
 // SELECTOR DESDE LA BIBLIOTECA
 // ---------------------------------------------------------------------------
 /**
@@ -323,7 +573,7 @@ export function dropZone({ folder = 'general', multiple = true, onUploaded, labe
  *
  * @returns {Promise<{url:string, storage_path?:string, alt?:string}|null>}
  */
-export function pickImage({ folder = 'general', title = 'Elegir fotografía' } = {}) {
+export function pickImage({ folder = 'general', title = 'Elegir fotografía', aspect, hint } = {}) {
   return new Promise((resolve) => {
     let settled = false;
     const finish = (value) => {
@@ -364,10 +614,14 @@ export function pickImage({ folder = 'general', title = 'Elegir fotografía' } =
     const body = el('div', { class: 'adm-picker' }, [
       dropZone({
         folder,
+        crop: Boolean(aspect || hint),
+        aspect,
+        hint,
         onUploaded: (rows) => {
           if (rows[0]) finish({ url: rows[0].url, storage_path: rows[0].storage_path, alt: rows[0].alt || '' });
         },
       }),
+      hint ? el('p', { class: 'adm-field__hint', style: 'margin:.5rem 0 0', text: hint }) : null,
       el('h3', { class: 'adm-picker__title', text: 'O elige una que ya tengas' }),
       grid,
     ]);

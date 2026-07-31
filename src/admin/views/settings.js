@@ -12,7 +12,7 @@ import {
   el, notify, friendlyError, confirmDialog, field, input, textarea, select,
   checkbox, setDirty, formatDate, emptyState,
 } from '../ui.js';
-import { pickImage, IMAGE_SPECS } from '../media.js';
+import { pickImage, recropAndUpload, IMAGE_SPECS } from '../media.js';
 
 // ---------------------------------------------------------------------------
 // EDITOR DE LISTAS DE ENLACES
@@ -110,28 +110,46 @@ function linkListEditor(items, { onChange, withVisibility = false }) {
 // ---------------------------------------------------------------------------
 // IMAGEN CON VISTA PREVIA
 // ---------------------------------------------------------------------------
-function imageField(labelText, currentUrl, folder, onPick, { hint } = {}) {
+function imageField(labelText, currentUrl, folder, onPick, { hint, aspect } = {}) {
+  let current = currentUrl || '';
   const preview = el('img', {
-    src: resolveImage(currentUrl) || '',
+    src: resolveImage(current) || '',
     alt: '',
     style: 'width:100%; max-width:200px; border-radius:8px; background:#efe9dd; object-fit:contain; padding:.5rem',
   });
   const btn = el('button', {
     class: 'adm-btn adm-btn--ghost',
     type: 'button',
-    text: currentUrl ? 'Cambiar imagen' : 'Elegir imagen',
+    text: current ? 'Cambiar imagen' : 'Elegir imagen',
     onClick: async () => {
-      const picked = await pickImage({ folder, title: labelText });
+      const picked = await pickImage({ folder, title: labelText, aspect, hint });
       if (!picked) return;
+      current = picked.url;
       preview.src = picked.url;
       btn.textContent = 'Cambiar imagen';
+      recropBtn.hidden = false;
       onPick(picked.url);
+    },
+  });
+  const recropBtn = el('button', {
+    class: 'adm-btn adm-btn--ghost adm-btn--sm',
+    type: 'button',
+    text: '✂ Encuadrar',
+    hidden: !current,
+    onClick: async () => {
+      if (!current) return;
+      const row = await recropAndUpload(resolveImage(current), { folder, aspect, hint });
+      if (!row) return;
+      current = row.url;
+      preview.src = row.url;
+      onPick(row.url);
+      notify('Encuadre aplicado', 'success');
     },
   });
   return el('div', { class: 'adm-field' }, [
     el('span', { class: 'adm-field__label', text: labelText }),
     preview,
-    el('div', { style: 'margin-top:.6rem' }, [btn]),
+    el('div', { class: 'adm-actions', style: 'margin-top:.6rem; gap:.5rem' }, [btn, recropBtn]),
     hint ? el('span', { class: 'adm-field__hint', text: hint }) : null,
   ]);
 }
@@ -176,15 +194,19 @@ export async function render(host) {
       field('Lema', brandSlogan),
       imageField('Logotipo', draft.brand.logo, 'general', (url) => { draft.brand.logo = url; touch(); }, {
         hint: `Se muestra en la cabecera y en el pie. ${IMAGE_SPECS.logo}`,
+        aspect: 1570 / 664,
       }),
       imageField('Icono del navegador (favicon)', draft.brand.favicon, 'general', (url) => { draft.brand.favicon = url; touch(); }, {
         hint: IMAGE_SPECS.favicon,
+        aspect: 1,
       }),
       imageField('Icono del acceso directo en el móvil', draft.brand.app_icon, 'general', (url) => { draft.brand.app_icon = url; touch(); }, {
         hint: IMAGE_SPECS.app_icon,
+        aspect: 1,
       }),
       imageField('Imagen al compartir en redes', draft.brand.og_image, 'general', (url) => { draft.brand.og_image = url; touch(); }, {
         hint: `Se ve al compartir la web en WhatsApp, Facebook o X. ${IMAGE_SPECS.og}`,
+        aspect: 1200 / 630,
       }),
     ])
   );

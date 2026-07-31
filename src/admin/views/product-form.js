@@ -14,7 +14,7 @@ import {
   el, notify, friendlyError, confirmDialog, field, input, textarea, select,
   checkbox, slugify, setDirty, setFieldError,
 } from '../ui.js';
-import { dropZone, pickImage, IMAGE_SPECS } from '../media.js';
+import { dropZone, pickImage, recropAndUpload, IMAGE_SPECS } from '../media.js';
 
 const SIZE_PRESETS = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const COLOR_PRESETS = [
@@ -547,6 +547,19 @@ export async function renderProductForm(host, { navigate }, idOrNew) {
       }));
     }
     actions.push(
+      el('button', {
+        class: 'adm-btn adm-btn--ghost adm-btn--sm', type: 'button', text: '✂ Encuadrar',
+        title: 'Recortar y encuadrar esta foto',
+        onClick: async () => {
+          const row = await recropAndUpload(resolveImage(img.url), { folder: 'products', aspect: 4 / 5, hint: IMAGE_SPECS.product });
+          if (!row) return;
+          img.url = row.url;
+          img.storage_path = row.storage_path;
+          touch();
+          drawPhotos();
+          notify('Encuadre aplicado', 'success');
+        },
+      }),
       el('button', { class: 'adm-btn adm-btn--ghost adm-btn--sm', type: 'button', text: '◀', 'aria-label': 'Mover antes', onClick: () => moveWithin(items, img, -1) }),
       el('button', { class: 'adm-btn adm-btn--ghost adm-btn--sm', type: 'button', text: '▶', 'aria-label': 'Mover después', onClick: () => moveWithin(items, img, 1) }),
       el('button', {
@@ -580,7 +593,7 @@ export async function renderProductForm(host, { navigate }, idOrNew) {
   }
 
   async function addPhotosToColor(colorSlug) {
-    const picked = await pickImage({ folder: 'products', title: 'Añadir una fotografía' });
+    const picked = await pickImage({ folder: 'products', title: 'Añadir una fotografía', aspect: 4 / 5, hint: IMAGE_SPECS.product });
     if (!picked) return;
     images.push({ ...picked, color_slug: colorSlug || '' });
     touch();
@@ -628,6 +641,9 @@ export async function renderProductForm(host, { navigate }, idOrNew) {
       angleDatalist,
       dropZone({
         folder: 'products',
+        crop: true,
+        aspect: 4 / 5,
+        hint: IMAGE_SPECS.product,
         onUploaded: (rows) => {
           rows.forEach((r) => images.push({ url: r.url, storage_path: r.storage_path, alt: r.alt || '', color_slug: '' }));
           touch();

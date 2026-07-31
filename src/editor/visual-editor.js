@@ -416,6 +416,26 @@ class VisualEditor {
     const altId = node.dataset.cmsAlt;
     const preview = h('img', { class: 've-panel__img', src: node.src, alt: '' });
 
+    // La proporción del hueco real: así el recorte encaja tal cual se verá.
+    const rect = node.getBoundingClientRect();
+    const slotAspect = rect.width > 20 && rect.height > 20 ? rect.width / rect.height : undefined;
+    const aspectHint = slotAspect
+      ? `Este hueco es ${slotAspect >= 1.4 ? 'apaisado' : slotAspect <= 0.85 ? 'vertical' : 'casi cuadrado'} (${Math.round(rect.width)}×${Math.round(rect.height)} px en pantalla). Recorta para que se vea bien.`
+      : 'Ajusta el encuadre para que se vea bien en móvil y ordenador.';
+
+    const applyPicked = (picked) => {
+      node.src = picked.url;
+      node.removeAttribute('srcset');
+      preview.src = picked.url;
+      this.fieldValue(id, picked.url);
+      if (altId && picked.alt) {
+        node.alt = picked.alt;
+        this.fieldValue(altId, picked.alt);
+        altControl.value = picked.alt;
+      }
+      this.positionImageButtons();
+    };
+
     const changeBtn = h('button', {
       class: 've-btn ve-btn--primary',
       type: 'button',
@@ -423,17 +443,20 @@ class VisualEditor {
       style: 'width:100%',
       onClick: async () => {
         const { pickImage } = await import('../admin/media.js');
-        const picked = await pickImage({ folder: this.folder, title: 'Elegir fotografía' });
-        if (!picked) return;
-        node.src = picked.url;
-        node.removeAttribute('srcset');
-        preview.src = picked.url;
-        this.fieldValue(id, picked.url);
-        if (altId && picked.alt) {
-          node.alt = picked.alt;
-          this.fieldValue(altId, picked.alt);
-          altControl.value = picked.alt;
-        }
+        const picked = await pickImage({ folder: this.folder, title: 'Elegir fotografía', aspect: slotAspect, hint: aspectHint });
+        if (picked) applyPicked(picked);
+      },
+    });
+
+    const recropBtn = h('button', {
+      class: 've-btn',
+      type: 'button',
+      text: '✂ Encuadrar esta foto',
+      style: 'width:100%; margin-top:.5rem',
+      onClick: async () => {
+        const { recropAndUpload } = await import('../admin/media.js');
+        const row = await recropAndUpload(node.src, { folder: this.folder, aspect: slotAspect, hint: aspectHint });
+        if (row) applyPicked(row);
       },
     });
 
@@ -449,6 +472,8 @@ class VisualEditor {
       body: [
         preview,
         changeBtn,
+        recropBtn,
+        h('p', { class: 've-panel__hint', text: aspectHint }),
         h('label', { class: 've-panel__label', style: 'margin-top:1.15rem', text: 'Descripción de la fotografía' }),
         altControl,
         h('p', {

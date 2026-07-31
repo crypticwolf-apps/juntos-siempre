@@ -14,7 +14,7 @@ import {
   el, notify, friendlyError, confirmDialog, openModal, field, input, textarea,
   select, checkbox, slugify, emptyState, makeSortable, dragHandle,
 } from '../ui.js';
-import { pickImage, IMAGE_SPECS } from '../media.js';
+import { pickImage, recropAndUpload, IMAGE_SPECS } from '../media.js';
 
 export async function render(host) {
   let categories = await listCategories();
@@ -229,12 +229,30 @@ export async function render(host) {
       type: 'button',
       text: imageUrl ? 'Cambiar imagen' : 'Elegir imagen',
       onClick: async () => {
-        const picked = await pickImage({ folder: 'categories', title: 'Imagen de la categoría' });
+        const picked = await pickImage({
+          folder: 'categories', title: 'Imagen de la categoría',
+          aspect: 4 / 5, hint: IMAGE_SPECS.category,
+        });
         if (!picked) return;
         imageUrl = picked.url;
         preview.src = picked.url;
         imageBtn.textContent = 'Cambiar imagen';
+        recropBtn.hidden = false;
         if (!altField.value && picked.alt) altField.value = picked.alt;
+      },
+    });
+    const recropBtn = el('button', {
+      class: 'adm-btn adm-btn--ghost adm-btn--sm',
+      type: 'button',
+      text: '✂ Encuadrar',
+      hidden: !imageUrl,
+      onClick: async () => {
+        if (!imageUrl) return;
+        const row = await recropAndUpload(resolveImage(imageUrl), { folder: 'categories', aspect: 4 / 5, hint: IMAGE_SPECS.category });
+        if (!row) return;
+        imageUrl = row.url;
+        preview.src = row.url;
+        notify('Encuadre aplicado', 'success');
       },
     });
 
@@ -288,7 +306,7 @@ export async function render(host) {
         el('div', { class: 'adm-field' }, [
           el('span', { class: 'adm-field__label', text: 'Imagen' }),
           preview,
-          el('div', { style: 'margin-top:.6rem' }, [imageBtn]),
+          el('div', { class: 'adm-actions', style: 'margin-top:.6rem; gap:.5rem' }, [imageBtn, recropBtn]),
           el('span', { class: 'adm-field__hint', text: IMAGE_SPECS.category }),
         ]),
         field('Descripción de la imagen', altField),

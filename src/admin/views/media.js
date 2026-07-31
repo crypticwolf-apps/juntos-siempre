@@ -5,7 +5,7 @@ import { listMedia, deleteMedia, supabase } from '../api.js';
 import {
   el, notify, friendlyError, confirmDialog, select, input, emptyState, formatDate,
 } from '../ui.js';
-import { dropZone, FOLDERS } from '../media.js';
+import { dropZone, FOLDERS, IMAGE_SPECS } from '../media.js';
 
 function readableSize(bytes) {
   if (!bytes) return '';
@@ -36,7 +36,15 @@ export async function render(host) {
   host.appendChild(
     el('section', { class: 'adm-card' }, [
       el('h2', { class: 'adm-card__title', text: 'Subir fotografías' }),
-      el('p', { class: 'adm-card__sub', text: 'Se optimizan solas al subirlas para que la web siga siendo rápida.' }),
+      el('p', { class: 'adm-card__sub', text: 'Se optimizan solas al subirlas (máximo 2000 px de lado) para que la web siga siendo rápida.' }),
+      el('ul', { class: 'adm-specs' }, [
+        el('li', { text: `Fotos de producto — ${IMAGE_SPECS.product}` }),
+        el('li', { text: `Imagen de categoría — ${IMAGE_SPECS.category}` }),
+        el('li', { text: `Banner / cabecera — ${IMAGE_SPECS.hero}` }),
+        el('li', { text: `Icono del navegador — ${IMAGE_SPECS.favicon}` }),
+        el('li', { text: `Icono del móvil — ${IMAGE_SPECS.app_icon}` }),
+        el('li', { text: `Compartir en redes — ${IMAGE_SPECS.og}` }),
+      ]),
       el('div', { style: 'max-width:320px; margin-bottom:1rem' }, [
         el('span', { class: 'adm-field__label', text: 'Guardar en la carpeta' }),
         uploadFolder,

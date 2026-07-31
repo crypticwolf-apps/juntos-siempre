@@ -18,6 +18,22 @@ export const FOLDERS = [
   { value: 'general', label: 'General' },
 ];
 
+/**
+ * Resoluciones recomendadas para cada tipo de imagen. Se muestran como pista
+ * junto a cada campo para que quien suba una foto sepa el tamaño ideal.
+ * Todo se optimiza y se reduce solo al subirlo (máximo 2000 px de lado).
+ */
+export const IMAGE_SPECS = {
+  logo: 'PNG con fondo transparente · ancho ideal ~800 px (proporción apaisada).',
+  favicon: 'Cuadrada · 512 × 512 px · PNG o SVG. Es el icono de la pestaña del navegador.',
+  app_icon: 'Cuadrada · 1024 × 1024 px · PNG sin transparencia. Es el icono que queda al añadir la web a la pantalla de inicio del móvil.',
+  og: 'Horizontal · 1200 × 630 px · JPG. Es la imagen que se ve al compartir el enlace.',
+  category: 'Vertical (proporción 4:5) · ~1000 × 1250 px.',
+  product: 'Vertical (proporción 4:5) · ~1200 × 1500 px. Todas las fotos del producto con el mismo encuadre quedan mejor.',
+  hero: 'Horizontal (16:9) · ~1920 × 1080 px.',
+  banner: 'Horizontal ancha · ~1920 × 800 px.',
+};
+
 const MAX_SOURCE_BYTES = 15 * 1024 * 1024; // 15 MB de origen
 const MAX_EDGE = 2000; // lado máximo tras optimizar
 const QUALITY = 0.86;

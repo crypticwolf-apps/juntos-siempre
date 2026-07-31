@@ -15,7 +15,7 @@ import {
   el, notify, friendlyError, confirmDialog, openModal, field, input, textarea,
   checkbox, emptyState, setDirty, select,
 } from '../ui.js';
-import { pickImage } from '../media.js';
+import { pickImage, IMAGE_SPECS } from '../media.js';
 
 // Cada página del gestor se corresponde con un archivo de la web.
 const PAGE_FILES = {
@@ -94,6 +94,7 @@ function fieldsEditor(data, folder, onChange) {
             el('span', { class: 'adm-field__label', text: labelFor(key) }),
             preview,
             el('div', { style: 'margin-top:.6rem' }, [btn]),
+            el('span', { class: 'adm-field__hint', text: IMAGE_SPECS.banner }),
           ])
         );
         return;

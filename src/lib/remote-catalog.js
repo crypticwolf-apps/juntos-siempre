@@ -86,18 +86,23 @@ export async function loadRemoteCatalog() {
       const productColors = colorOrder.map((c) => {
         const own = images.filter((i) => i.color_slug === c.slug);
         const pool = own.length ? own : images;
-        const urls = pool.map((i) => resolveImage(i.url)).filter(Boolean);
-        const main = urls[0] || '';
-        // Orden guardado: 1ª principal, 2ª al pasar el ratón, resto galería.
-        const rest = urls.slice(2);
-        const gallery = [main, ...rest].filter(Boolean).map((src, idx) => ({
-          src,
-          label: pool[idx]?.alt && pool[idx].alt !== row.name ? pool[idx].alt : GALLERY_LABELS[idx] || '',
+        // Cada foto conserva su propio texto para que la etiqueta ("Frontal",
+        // "Trasera"…) acompañe a la imagen correcta.
+        const withUrl = pool
+          .map((i) => ({ src: resolveImage(i.url), alt: i.alt }))
+          .filter((x) => x.src);
+        const main = withUrl[0]?.src || '';
+        const hover = withUrl[1]?.src || main;
+        // Galería de la ficha: portada + resto, sin repetir la de "al pasar el ratón".
+        const galleryPool = withUrl.filter((_, idx) => idx !== 1);
+        const gallery = galleryPool.map((x, idx) => ({
+          src: x.src,
+          label: x.alt && x.alt !== row.name ? x.alt : GALLERY_LABELS[idx] || '',
         }));
         return {
           id: c.slug,
           image: main,
-          hover: urls[1] || main,
+          hover,
           gallery: gallery.length ? gallery : [{ src: main, label: '' }],
         };
       });

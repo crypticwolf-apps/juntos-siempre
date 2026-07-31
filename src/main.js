@@ -23,7 +23,7 @@ import { mountHomeCollections, mountFeatured, mountShop } from './modules/catalo
 import { mountProductPage } from './modules/product-page.js';
 import { initAnimations } from './modules/animations.js';
 import { initSeo } from './modules/seo.js';
-import { loadContent, applyContent } from './lib/content.js';
+import { loadContent, applyContent, settings, resolveImage } from './lib/content.js';
 import { loadRemoteCatalog } from './lib/remote-catalog.js';
 import { setCatalog } from './data/products.js';
 import { mountChapters, mountImpactSteps } from './lib/repeaters.js';
@@ -118,6 +118,73 @@ function initFavicon() {
   if (mq.addEventListener) mq.addEventListener('change', apply);
 }
 
+/**
+ * Aplica los iconos personalizados desde el gestor:
+ *   · brand.favicon  -> icono de la pestaña del navegador
+ *   · brand.app_icon -> icono del acceso directo en el móvil (pantalla de inicio)
+ *
+ * Devuelve true si se ha puesto un favicon propio (para no pisarlo con el
+ * favicon adaptativo por defecto).
+ */
+function applyBrandIcons() {
+  const favicon = resolveImage(settings('brand', 'favicon', ''));
+  const appIcon = resolveImage(settings('brand', 'app_icon', '')) || favicon;
+  let customFavicon = false;
+
+  // --- Icono de la pestaña del navegador ---
+  if (favicon) {
+    // Se quitan los <link rel="icon"> originales para que no compitan.
+    document.querySelectorAll('link[rel~="icon"]').forEach((l) => l.remove());
+    const link = document.createElement('link');
+    link.rel = 'icon';
+    link.setAttribute('data-dynamic', '');
+    link.href = favicon;
+    document.head.appendChild(link);
+    customFavicon = true;
+  }
+
+  // --- Icono del acceso directo en el móvil (iOS: apple-touch-icon) ---
+  if (appIcon) {
+    let apple = document.querySelector('link[rel="apple-touch-icon"]');
+    if (!apple) {
+      apple = document.createElement('link');
+      apple.rel = 'apple-touch-icon';
+      document.head.appendChild(apple);
+    }
+    apple.href = appIcon;
+
+    // --- Icono del acceso directo en Android (manifest dinámico) ---
+    try {
+      const base = new URL('./', document.baseURI).href;
+      const manifest = {
+        name: settings('brand', 'name', 'Juntos Siempre'),
+        short_name: settings('brand', 'name', 'Juntos Siempre'),
+        start_url: base,
+        scope: base,
+        display: 'standalone',
+        background_color: '#0e0e0d',
+        theme_color: '#0e0e0d',
+        icons: [
+          { src: appIcon, sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: appIcon, sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+        ],
+      };
+      const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+      let mLink = document.querySelector('link[rel="manifest"]');
+      if (!mLink) {
+        mLink = document.createElement('link');
+        mLink.rel = 'manifest';
+        document.head.appendChild(mLink);
+      }
+      mLink.href = URL.createObjectURL(blob);
+    } catch {
+      /* si el manifest dinámico falla, se mantiene el estático */
+    }
+  }
+
+  return customFavicon;
+}
+
 function wireAccordions() {
   $$('[data-accordion] .accordion__head').forEach((head) => {
     head.addEventListener('click', () => {
@@ -168,7 +235,10 @@ async function init() {
   // Los textos e imágenes guardados se aplican encima del contenido original.
   applyContent(document);
 
-  initFavicon();
+  // Iconos personalizados desde el gestor; si no hay favicon propio, se usa el
+  // favicon adaptativo (claro/oscuro) por defecto.
+  const customFavicon = applyBrandIcons();
+  if (!customFavicon) initFavicon();
   wireNewsletter();
   wireContact();
   wireAccordions();

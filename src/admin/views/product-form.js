@@ -12,9 +12,9 @@ import { invalidateCache } from '../../lib/content.js';
 import { resolveImage } from '../../lib/asset-map.js';
 import {
   el, notify, friendlyError, confirmDialog, field, input, textarea, select,
-  checkbox, slugify, setDirty, makeSortable, setFieldError,
+  checkbox, slugify, setDirty, setFieldError,
 } from '../ui.js';
-import { dropZone, pickImage } from '../media.js';
+import { dropZone, pickImage, IMAGE_SPECS } from '../media.js';
 
 const SIZE_PRESETS = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const COLOR_PRESETS = [
@@ -464,117 +464,168 @@ export async function renderProductForm(host, { navigate }, idOrNew) {
   );
 
   // ==========================================================================
-  // FOTOGRAFÍAS
+  // FOTOGRAFÍAS  (agrupadas por color, con roles claros)
   // ==========================================================================
-  const photoGrid = el('div', { class: 'adm-photos' });
+  // Sugerencias de "qué muestra la foto". Se guardan en el texto de la imagen y
+  // son las mismas etiquetas que luego aparecen en la ficha pública.
+  const ANGLE_PRESETS = ['Frontal', 'Trasera', 'Lateral', 'Detalle / bordado', 'En modelo', 'Ambiente'];
+  const angleListId = 'adm-angles';
+  const angleDatalist = el('datalist', { id: angleListId },
+    ANGLE_PRESETS.map((a) => el('option', { value: a }))
+  );
+
+  const photoGroups = el('div', { class: 'adm-photo-groups' });
+
+  /** Agrupa las fotos por color, respetando el orden guardado. */
+  function groupByColor() {
+    const known = new Set(colors.map((c) => c.slug));
+    const groups = colors.map((c) => ({ color: c, items: images.filter((i) => i.color_slug === c.slug) }));
+    const orphans = images.filter((i) => !i.color_slug || !known.has(i.color_slug));
+    if (orphans.length) groups.push({ color: null, items: orphans });
+    return groups.filter((g) => g.items.length || g.color);
+  }
+
+  /** Intercambia una foto con su vecina del mismo grupo. */
+  function moveWithin(items, img, dir) {
+    const target = items[items.indexOf(img) + dir];
+    if (!target) return;
+    const a = images.indexOf(img);
+    const b = images.indexOf(target);
+    [images[a], images[b]] = [images[b], images[a]];
+    touch();
+    drawPhotos();
+  }
+
+  /** Coloca la foto como portada (primera) de su color. */
+  function makeCoverOfColor(items, img) {
+    if (items[0] === img) return;
+    images.splice(images.indexOf(img), 1);
+    images.splice(images.indexOf(items[0]), 0, img);
+    touch();
+    drawPhotos();
+  }
+
+  /** Coloca la foto como portada del producto (la que sale en la tienda). */
+  function makeProductCover(img) {
+    const from = images.indexOf(img);
+    if (from <= 0) return;
+    images.splice(from, 1);
+    images.unshift(img);
+    touch();
+    drawPhotos();
+  }
+
+  function photoCard(img, group) {
+    const items = group.items;
+    const gi = items.indexOf(img);
+    const isProductCover = images.indexOf(img) === 0;
+    const role = gi === 0 ? 'Portada del color' : gi === 1 ? 'Al pasar el ratón' : 'Galería';
+
+    const colorOptions = [
+      { value: '', label: 'Sin color asignado' },
+      ...colors.map((c) => ({ value: c.slug, label: c.name })),
+    ];
+    const colorPick = select(colorOptions, { value: img.color_slug || '' });
+    colorPick.addEventListener('change', () => { img.color_slug = colorPick.value; touch(); drawPhotos(); });
+
+    const altField = input({ value: img.alt || '', placeholder: 'Ej.: Frontal', list: angleListId });
+    altField.addEventListener('input', () => { img.alt = altField.value; touch(); });
+
+    const actions = [];
+    if (gi !== 0) {
+      actions.push(el('button', {
+        class: 'adm-btn adm-btn--ghost adm-btn--sm', type: 'button', text: '★ Portada',
+        title: 'Poner como primera foto de este color',
+        onClick: () => makeCoverOfColor(items, img),
+      }));
+    }
+    if (gi === 0 && !isProductCover) {
+      actions.push(el('button', {
+        class: 'adm-btn adm-btn--ghost adm-btn--sm', type: 'button', text: 'Portada tienda',
+        title: 'Usar esta foto como imagen del producto en la tienda',
+        onClick: () => makeProductCover(img),
+      }));
+    }
+    actions.push(
+      el('button', { class: 'adm-btn adm-btn--ghost adm-btn--sm', type: 'button', text: '◀', 'aria-label': 'Mover antes', onClick: () => moveWithin(items, img, -1) }),
+      el('button', { class: 'adm-btn adm-btn--ghost adm-btn--sm', type: 'button', text: '▶', 'aria-label': 'Mover después', onClick: () => moveWithin(items, img, 1) }),
+      el('button', {
+        class: 'adm-btn adm-btn--ghost adm-btn--sm', type: 'button', text: 'Quitar',
+        onClick: async () => {
+          const ok = await confirmDialog({
+            title: '¿Quitar esta fotografía?',
+            text: 'Dejará de verse en este producto. La foto seguirá guardada en la sección Imágenes.',
+            confirmLabel: 'Sí, quitar',
+            danger: true,
+          });
+          if (!ok) return;
+          images.splice(images.indexOf(img), 1);
+          touch();
+          drawPhotos();
+        },
+      })
+    );
+
+    return el('figure', { class: 'adm-photo' }, [
+      el('img', { class: 'adm-photo__img', src: resolveImage(img.url), alt: img.alt || '', loading: 'lazy' }),
+      el('span', { class: 'adm-photo__tag', text: role }),
+      isProductCover ? el('span', { class: 'adm-photo__tag adm-photo__tag--cover', text: '★ Tienda' }) : null,
+      el('div', { class: 'adm-photo__body' }, [
+        el('label', { class: 'adm-photo__minilabel', text: '¿Qué muestra?' }),
+        altField,
+        colorPick,
+        el('div', { class: 'adm-photo__actions' }, actions),
+      ]),
+    ]);
+  }
+
+  async function addPhotosToColor(colorSlug) {
+    const picked = await pickImage({ folder: 'products', title: 'Añadir una fotografía' });
+    if (!picked) return;
+    images.push({ ...picked, color_slug: colorSlug || '' });
+    touch();
+    drawPhotos();
+  }
 
   function drawPhotos() {
-    photoGrid.innerHTML = '';
+    photoGroups.innerHTML = '';
 
     if (!images.length) {
-      photoGrid.appendChild(
-        el('p', { class: 'adm-muted', text: 'Todavía no hay fotografías. Arrastra las tuyas al recuadro de arriba.' })
+      photoGroups.appendChild(
+        el('p', { class: 'adm-muted', text: 'Todavía no hay fotografías. Súbelas en el recuadro de arriba y asígnalas a cada color.' })
       );
       return;
     }
 
-    images.forEach((img, index) => {
-      const colorOptions = [
-        { value: '', label: 'Sin color concreto' },
-        ...colors.map((c) => ({ value: c.slug, label: c.name })),
-      ];
-      const colorPick = select(colorOptions, { value: img.color_slug || '' });
-      colorPick.addEventListener('change', () => { img.color_slug = colorPick.value; touch(); });
+    groupByColor().forEach((group) => {
+      const label = group.color ? group.color.name : 'Sin color asignado';
+      const head = el('div', { class: 'adm-photo-group__head' }, [
+        group.color
+          ? el('span', { class: 'adm-chip__dot', style: `background:${group.color.hex}` })
+          : null,
+        el('span', { class: 'adm-photo-group__name', text: label }),
+        el('span', { class: 'adm-photo-group__count', text: `${group.items.length} ${group.items.length === 1 ? 'foto' : 'fotos'}` }),
+        el('button', {
+          class: 'adm-btn adm-btn--ghost adm-btn--sm', type: 'button', text: '＋ Añadir foto',
+          onClick: () => addPhotosToColor(group.color ? group.color.slug : ''),
+        }),
+      ]);
 
-      const altField = input({ value: img.alt || '', placeholder: 'Describe la foto' });
-      altField.addEventListener('input', () => { img.alt = altField.value; touch(); });
+      const grid = el('div', { class: 'adm-photos' }, group.items.map((img) => photoCard(img, group)));
 
-      const tag = index === 0 ? 'Principal' : index === 1 ? 'Al pasar el ratón' : `Galería ${index - 1}`;
-
-      photoGrid.appendChild(
-        el('figure', { class: 'adm-photo', 'data-id': String(index), draggable: 'true' }, [
-          el('img', { class: 'adm-photo__img', src: resolveImage(img.url), alt: img.alt || '', loading: 'lazy' }),
-          el('span', { class: 'adm-photo__tag', text: tag }),
-          el('div', { class: 'adm-photo__body' }, [
-            colorPick,
-            altField,
-            el('div', { class: 'adm-photo__actions' }, [
-              index !== 0
-                ? el('button', {
-                    class: 'adm-btn adm-btn--ghost adm-btn--sm',
-                    type: 'button',
-                    text: 'Hacer principal',
-                    onClick: () => {
-                      images.unshift(images.splice(index, 1)[0]);
-                      touch();
-                      drawPhotos();
-                    },
-                  })
-                : null,
-              el('button', {
-                class: 'adm-btn adm-btn--ghost adm-btn--sm',
-                type: 'button',
-                text: '◀',
-                'aria-label': 'Mover antes',
-                onClick: () => {
-                  if (index === 0) return;
-                  [images[index - 1], images[index]] = [images[index], images[index - 1]];
-                  touch();
-                  drawPhotos();
-                },
-              }),
-              el('button', {
-                class: 'adm-btn adm-btn--ghost adm-btn--sm',
-                type: 'button',
-                text: '▶',
-                'aria-label': 'Mover después',
-                onClick: () => {
-                  if (index === images.length - 1) return;
-                  [images[index + 1], images[index]] = [images[index], images[index + 1]];
-                  touch();
-                  drawPhotos();
-                },
-              }),
-              el('button', {
-                class: 'adm-btn adm-btn--ghost adm-btn--sm',
-                type: 'button',
-                text: 'Quitar',
-                onClick: async () => {
-                  const ok = await confirmDialog({
-                    title: '¿Quitar esta fotografía?',
-                    text: 'Dejará de verse en este producto. La foto seguirá guardada en la sección Imágenes.',
-                    confirmLabel: 'Sí, quitar',
-                    danger: true,
-                  });
-                  if (!ok) return;
-                  images.splice(index, 1);
-                  touch();
-                  drawPhotos();
-                },
-              }),
-            ]),
-          ]),
-        ])
-      );
+      photoGroups.appendChild(el('div', { class: 'adm-photo-group' }, [head, grid]));
     });
   }
-
-  makeSortable(photoGrid, '.adm-photo', (orderedIds) => {
-    const next = orderedIds.map((i) => images[Number(i)]).filter(Boolean);
-    if (next.length === images.length) {
-      images = next;
-      touch();
-      drawPhotos();
-    }
-  });
 
   host.appendChild(
     el('section', { class: 'adm-card' }, [
       el('h2', { class: 'adm-card__title', text: 'Fotografías' }),
       el('p', {
         class: 'adm-card__sub',
-        text: 'La primera es la principal y la segunda es la que se ve al pasar el ratón. Arrástralas para cambiar el orden.',
+        text: 'Las fotos se agrupan por color. Dentro de cada color, la primera es la portada y la segunda la que se ve al pasar el ratón; el resto forman la galería. En "¿Qué muestra?" indica si es frontal, trasera, un detalle… (así aparece en la ficha).',
       }),
+      el('p', { class: 'adm-field__hint', style: 'margin:-.5rem 0 1rem', text: IMAGE_SPECS.product }),
+      angleDatalist,
       dropZone({
         folder: 'products',
         onUploaded: (rows) => {
@@ -588,16 +639,10 @@ export async function renderProductForm(host, { navigate }, idOrNew) {
           class: 'adm-btn adm-btn--ghost adm-btn--sm',
           type: 'button',
           text: 'Elegir de la biblioteca',
-          onClick: async () => {
-            const picked = await pickImage({ folder: 'products', title: 'Añadir una fotografía' });
-            if (!picked) return;
-            images.push({ ...picked, color_slug: '' });
-            touch();
-            drawPhotos();
-          },
+          onClick: () => addPhotosToColor(''),
         }),
       ]),
-      photoGrid,
+      photoGroups,
     ])
   );
 

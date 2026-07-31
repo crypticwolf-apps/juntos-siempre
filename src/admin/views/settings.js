@@ -12,7 +12,7 @@ import {
   el, notify, friendlyError, confirmDialog, field, input, textarea, select,
   checkbox, setDirty, formatDate, emptyState,
 } from '../ui.js';
-import { pickImage } from '../media.js';
+import { pickImage, IMAGE_SPECS } from '../media.js';
 
 // ---------------------------------------------------------------------------
 // EDITOR DE LISTAS DE ENLACES
@@ -175,13 +175,16 @@ export async function render(host) {
       field('Nombre de la marca', brandName),
       field('Lema', brandSlogan),
       imageField('Logotipo', draft.brand.logo, 'general', (url) => { draft.brand.logo = url; touch(); }, {
-        hint: 'Se muestra en la cabecera y en el pie. Mejor con fondo transparente.',
+        hint: `Se muestra en la cabecera y en el pie. ${IMAGE_SPECS.logo}`,
       }),
-      imageField('Icono del navegador', draft.brand.favicon, 'general', (url) => { draft.brand.favicon = url; touch(); }, {
-        hint: 'La imagen pequeña que aparece en la pestaña del navegador.',
+      imageField('Icono del navegador (favicon)', draft.brand.favicon, 'general', (url) => { draft.brand.favicon = url; touch(); }, {
+        hint: IMAGE_SPECS.favicon,
+      }),
+      imageField('Icono del acceso directo en el móvil', draft.brand.app_icon, 'general', (url) => { draft.brand.app_icon = url; touch(); }, {
+        hint: IMAGE_SPECS.app_icon,
       }),
       imageField('Imagen al compartir en redes', draft.brand.og_image, 'general', (url) => { draft.brand.og_image = url; touch(); }, {
-        hint: 'Se ve cuando alguien comparte la web en WhatsApp, Facebook o X.',
+        hint: `Se ve al compartir la web en WhatsApp, Facebook o X. ${IMAGE_SPECS.og}`,
       }),
     ])
   );

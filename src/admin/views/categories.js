@@ -14,7 +14,7 @@ import {
   el, notify, friendlyError, confirmDialog, openModal, field, input, textarea,
   select, checkbox, slugify, emptyState, makeSortable, dragHandle,
 } from '../ui.js';
-import { pickImage } from '../media.js';
+import { pickImage, IMAGE_SPECS } from '../media.js';
 
 export async function render(host) {
   let categories = await listCategories();
@@ -289,6 +289,7 @@ export async function render(host) {
           el('span', { class: 'adm-field__label', text: 'Imagen' }),
           preview,
           el('div', { style: 'margin-top:.6rem' }, [imageBtn]),
+          el('span', { class: 'adm-field__hint', text: IMAGE_SPECS.category }),
         ]),
         field('Descripción de la imagen', altField),
         activeBox,

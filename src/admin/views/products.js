@@ -10,6 +10,7 @@ import {
   el, $$, notify, friendlyError, confirmDialog, emptyState, input, select,
   makeSortable, dragHandle, formatPrice, statusLabel,
 } from '../ui.js';
+import { resolveImage } from '../../lib/asset-map.js';
 import { renderProductForm } from './product-form.js';
 
 export async function render(host, ctx) {
@@ -107,7 +108,7 @@ async function renderList(host, { navigate }) {
   function thumbFor(product) {
     const images = product.product_images || [];
     const primary = images.find((i) => i.is_primary) || [...images].sort((a, b) => a.position - b.position)[0];
-    return primary?.url || '';
+    return resolveImage(primary?.url || '');
   }
 
   function draw() {

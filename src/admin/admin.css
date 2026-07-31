@@ -254,6 +254,7 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 600; line-height: 1.2; }
   border-radius: var(--radius-lg);
   padding: clamp(1.1rem, 2.5vw, 1.6rem);
   margin-bottom: 1.25rem;
+  box-shadow: var(--shadow-sm);
 }
 .adm-card__title { font-size: 1.1rem; margin-bottom: 0.35rem; }
 .adm-card__sub { font-size: 0.88rem; color: var(--tinta-suave); margin-bottom: 1.1rem; }
@@ -289,7 +290,9 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 600; line-height: 1.2; }
   border: 1px solid var(--linea);
   border-radius: var(--radius-lg);
   padding: 0.7rem 0.9rem;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
 }
+.adm-row:hover { border-color: var(--arena); box-shadow: var(--shadow-sm); }
 .adm-row.is-dragging { opacity: 0.45; border-style: dashed; }
 .adm-row__thumb { width: 64px; height: 64px; object-fit: cover; border-radius: var(--radius); background: var(--hueso); }
 .adm-row__name { font-weight: 600; }
@@ -404,7 +407,35 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 600; line-height: 1.2; }
   font-size: 0.68rem; padding: 0.15rem 0.5rem; border-radius: 999px;
 }
 .adm-photo__actions { display: flex; gap: 0.25rem; flex-wrap: wrap; margin-top: 0.4rem; }
-.adm-photo .adm-input { font-size: 0.8rem; padding: 0.4rem 0.5rem; min-height: 34px; }
+.adm-photo .adm-input { font-size: 0.8rem; padding: 0.4rem 0.5rem; min-height: 34px; margin-bottom: 0.4rem; }
+.adm-photo .adm-input:last-of-type { margin-bottom: 0; }
+.adm-photo__minilabel { display: block; font-size: 0.72rem; font-weight: 600; color: var(--tinta-suave); margin-bottom: 0.25rem; }
+.adm-photo__tag--cover { left: auto; right: 0.5rem; background: var(--acento); }
+
+/* Fotos agrupadas por color dentro de la ficha de producto */
+.adm-photo-groups { display: flex; flex-direction: column; gap: 1.25rem; }
+.adm-photo-group {
+  border: 1px solid var(--linea); border-radius: var(--radius-lg);
+  padding: 0.9rem; background: #fbf9f4;
+}
+.adm-photo-group__head {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem;
+  margin-bottom: 0.85rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--linea);
+}
+.adm-photo-group__name { font-family: var(--serif); font-size: 1.02rem; font-weight: 600; }
+.adm-photo-group__count {
+  font-size: 0.75rem; color: var(--tinta-suave);
+  background: var(--hueso); padding: 0.1rem 0.55rem; border-radius: 999px;
+}
+.adm-photo-group__head .adm-btn { margin-left: auto; }
+
+/* Lista de resoluciones recomendadas */
+.adm-specs {
+  margin: 0 0 1.1rem; padding: 0.85rem 1rem; background: var(--hueso);
+  border-radius: var(--radius); display: grid; gap: 0.35rem;
+  font-size: 0.82rem; color: var(--tinta);
+}
+.adm-specs li { list-style: none; }
 
 /* -------------------------------------------------------------- VARIANTES -- */
 .adm-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 0.9rem; }

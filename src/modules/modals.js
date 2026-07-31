@@ -22,6 +22,10 @@ import {
 } from '../data/products.js';
 import { addItem, total, getItems, clearCart, setMeta } from './cart.js';
 import * as auth from './auth.js';
+import { paymentsEnabled, enabledProviders, startCheckout } from './payments.js';
+
+const PAY_LABELS = { stripe: 'Tarjeta · Apple Pay · Google Pay', paypal: 'PayPal' };
+const PAY_ICONS = { stripe: 'credit-card', paypal: 'wallet' };
 
 let lastFocused = null;
 let overlay;
@@ -559,7 +563,12 @@ export function openCheckout() {
     return;
   }
 
-  const data = { name: '', email: '', phone: '', address: '', city: '', zip: '', country: '', ship: 'standard', pay: 'Tarjeta' };
+  const realPay = paymentsEnabled();
+  const providers = realPay ? enabledProviders() : [];
+  const data = {
+    name: '', email: '', phone: '', address: '', city: '', zip: '', country: '',
+    ship: 'standard', pay: realPay ? providers[0] : 'Tarjeta',
+  };
   let step = 0;
 
   const node = el('div', { class: 'checkout' });
@@ -579,7 +588,7 @@ export function openCheckout() {
             el('span', { text: euros(it.lineTotal) }),
           ])
         ),
-        el('div', { class: 'checkout__total' }, [el('span', { text: 'Total (demo)' }), el('span', { text: euros(grand) })]),
+        el('div', { class: 'checkout__total' }, [el('span', { text: realPay ? 'Total' : 'Total (demo)' }), el('span', { text: euros(grand) })]),
       ]),
     ]);
   }
@@ -671,10 +680,25 @@ export function openCheckout() {
     ]);
   }
   function panelPay() {
-    const opt = (val, icon) => el('label', { class: 'radio-card' + (data.pay === val ? ' is-active' : '') }, [
+    const opt = (val, icon, label) => el('label', { class: 'radio-card' + (data.pay === val ? ' is-active' : '') }, [
       el('input', { type: 'radio', name: 'pay', value: val, ...(data.pay === val ? { checked: true } : {}), onChange: () => { data.pay = val; rerender(); } }),
-      el('span', { class: 'radio-card__title' }, [el('i', { 'data-lucide': icon }), val]),
+      el('span', { class: 'radio-card__title' }, [el('i', { 'data-lucide': icon }), label || val]),
     ]);
+
+    // Pagos reales activados: solo se muestran los proveedores configurados.
+    if (realPay) {
+      return el('div', { class: 'checkout__panel' }, [
+        el('h3', { class: 'checkout__step-title', text: 'Método de pago' }),
+        el('p', { class: 'checkout__secure' }, [
+          el('i', { 'data-lucide': 'shield-check', 'aria-hidden': 'true' }),
+          'Pago seguro. Se completará en la pasarela del proveedor.',
+        ]),
+        el('div', { class: 'radio-cards radio-cards--pay' },
+          providers.map((p) => opt(p, PAY_ICONS[p], PAY_LABELS[p]))),
+      ]);
+    }
+
+    // Sin pagos configurados: demostración.
     return el('div', { class: 'checkout__panel' }, [
       el('h3', { class: 'checkout__step-title', text: 'Método de pago' }),
       el('p', { class: 'checkout__demo' }, [
@@ -695,13 +719,29 @@ export function openCheckout() {
         el('div', {}, [el('dt', { text: 'Contacto' }), el('dd', { text: `${data.name} · ${data.email} · ${data.phone}` })]),
         el('div', {}, [el('dt', { text: 'Dirección' }), el('dd', { text: `${data.address}, ${data.zip} ${data.city} (${data.country})` })]),
         el('div', {}, [el('dt', { text: 'Envío' }), el('dd', { text: data.ship })]),
-        el('div', {}, [el('dt', { text: 'Pago' }), el('dd', { text: data.pay })]),
+        el('div', {}, [el('dt', { text: 'Pago' }), el('dd', { text: realPay ? (PAY_LABELS[data.pay] || data.pay) : data.pay })]),
       ]),
-      el('p', { class: 'checkout__demo' }, [
+      el('p', { class: realPay ? 'checkout__secure' : 'checkout__demo' }, [
         el('i', { 'data-lucide': 'shield-check', 'aria-hidden': 'true' }),
-        'Pedido de demostración. No se realizará ningún cobro.',
+        realPay
+          ? 'Al pulsar "Ir a pagar" irás a la pasarela segura para completar el pago.'
+          : 'Pedido de demostración. No se realizará ningún cobro.',
       ]),
     ]);
+  }
+
+  async function startRealPayment(btn) {
+    btn.disabled = true;
+    const original = btn.textContent;
+    btn.textContent = 'Redirigiendo al pago…';
+    try {
+      const payItems = items.map((it) => ({ slug: it.product.id, qty: it.qty }));
+      await startCheckout(data.pay, { items: payItems, shipping: data.ship });
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = original;
+      toast(e.message || 'No se ha podido iniciar el pago. Inténtalo de nuevo.', { type: 'error' });
+    }
   }
 
   function rerender() {
@@ -710,12 +750,13 @@ export function openCheckout() {
     const panel = panels[step]();
 
     const back = el('button', { class: 'btn btn--outline', type: 'button', text: 'Atrás', onClick: () => { step = Math.max(0, step - 1); rerender(); } });
+    const isLast = step === CHECKOUT_STEPS.length - 1;
     const next = el('button', {
       class: 'btn btn--primary', type: 'button',
-      text: step === CHECKOUT_STEPS.length - 1 ? 'Confirmar pedido (demo)' : 'Continuar',
+      text: isLast ? (realPay ? 'Ir a pagar' : 'Confirmar pedido (demo)') : 'Continuar',
       onClick: () => {
         if (step === 0 && !validateInfo(panel)) return;
-        if (step === CHECKOUT_STEPS.length - 1) { showSuccess(); return; }
+        if (isLast) { realPay ? startRealPayment(next) : showSuccess(); return; }
         step += 1;
         rerender();
       },

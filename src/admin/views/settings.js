@@ -166,6 +166,7 @@ export async function render(host) {
     footer: { ...(settings.footer || {}) },
     social: { ...(settings.social || {}) },
     seo: { ...(settings.seo || {}) },
+    payments: { ...(settings.payments || {}) },
   };
 
   const touch = () => setDirty(true);
@@ -292,6 +293,29 @@ export async function render(host) {
       el('h2', { class: 'adm-card__title', text: 'Cómo se ve la web en Google' }),
       field('Título general', seoTitle),
       field('Descripción general', seoDesc),
+    ])
+  );
+
+  // ---- PAGOS --------------------------------------------------------------
+  const payEnabled = checkbox('Activar cobros reales en la tienda', draft.payments.enabled ? { checked: true } : {});
+  payEnabled.querySelector('input').addEventListener('change', (e) => { draft.payments.enabled = e.target.checked; touch(); });
+  const payStripe = checkbox('Aceptar tarjeta (Stripe: Visa, Mastercard, Apple Pay, Google Pay)', draft.payments.stripe ? { checked: true } : {});
+  payStripe.querySelector('input').addEventListener('change', (e) => { draft.payments.stripe = e.target.checked; touch(); });
+  const payPaypal = checkbox('Aceptar PayPal', draft.payments.paypal ? { checked: true } : {});
+  payPaypal.querySelector('input').addEventListener('change', (e) => { draft.payments.paypal = e.target.checked; touch(); });
+
+  host.appendChild(
+    el('section', { class: 'adm-card' }, [
+      el('h2', { class: 'adm-card__title', text: 'Pagos' }),
+      el('p', { class: 'adm-card__sub', text: 'Cobra de verdad con tarjeta o PayPal. Mientras esté desactivado, la tienda usa el pago de demostración.' }),
+      payEnabled,
+      payStripe,
+      payPaypal,
+      el('ul', { class: 'adm-specs', style: 'margin-top:1rem' }, [
+        el('li', { text: 'Importante: aquí solo se activan los métodos. Las claves SECRETAS (las privadas) NO se ponen aquí: se guardan en Supabase → Edge Functions → Secrets, y nunca viajan a la web.' }),
+        el('li', { text: 'Pasos completos en el archivo CONFIGURAR_PAGOS.md del proyecto (o pídeselos a quien te ayuda con la web).' }),
+        el('li', { text: 'Antes de cobrar de verdad: estar dado de alta (autónomo/empresa), tener cuenta de Stripe/PayPal, y revisar las páginas legales (envíos, devoluciones, términos y privacidad).' }),
+      ]),
     ])
   );
 
@@ -454,6 +478,7 @@ export async function render(host) {
         saveSetting('footer', draft.footer, settings.footer),
         saveSetting('social', draft.social, settings.social),
         saveSetting('seo', draft.seo, settings.seo),
+        saveSetting('payments', draft.payments, settings.payments),
       ]);
       invalidateCache();
       setDirty(false);

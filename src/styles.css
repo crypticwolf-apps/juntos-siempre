@@ -704,6 +704,20 @@ input.is-invalid, textarea.is-invalid { border-color: #b23b32; }
 .checkout__panel { display: flex; flex-direction: column; gap: 1rem; }
 .checkout__demo { display: flex; align-items: center; gap: 0.5rem; font-size: 0.84rem; color: var(--marino); background: var(--arena); padding: 0.7rem 1rem; border-radius: var(--radius); }
 .checkout__demo i { width: 18px; height: 18px; }
+.checkout__secure { display: flex; align-items: center; gap: 0.5rem; font-size: 0.84rem; color: #1f5e43; background: rgba(47, 125, 93, 0.12); padding: 0.7rem 1rem; border-radius: var(--radius); }
+.checkout__secure i { width: 18px; height: 18px; }
+
+/* --- Página de vuelta tras pagar --- */
+.pago { min-height: 100vh; display: grid; place-items: center; padding: 1.5rem; }
+.pago__card { max-width: 460px; width: 100%; text-align: center; background: var(--crema, #f4f1ea); border-radius: 16px; padding: clamp(1.75rem, 5vw, 2.75rem); box-shadow: 0 20px 60px rgba(14, 14, 13, 0.16); }
+.pago__spinner { width: 42px; height: 42px; margin: 0 auto 1.25rem; border: 3px solid rgba(0, 0, 0, 0.12); border-top-color: var(--acento, #b07a4e); border-radius: 50%; animation: pago-spin 0.9s linear infinite; }
+@keyframes pago-spin { to { transform: rotate(360deg); } }
+.pago__icon { font-size: 2.75rem; margin-bottom: 0.5rem; }
+.pago__card.is-error .pago__icon { color: #a33b32; }
+.pago__title { font-size: clamp(1.35rem, 4vw, 1.7rem); margin-bottom: 0.5rem; }
+.pago__text { color: var(--tinta-suave, #6f6a60); margin-bottom: 1.5rem; }
+.pago__actions { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; }
+@media (prefers-reduced-motion: reduce) { .pago__spinner { animation: none; } }
 .checkout__hint { font-size: 0.82rem; color: var(--tinta-suave); }
 .checkout__nav { display: flex; justify-content: space-between; gap: 1rem; margin-top: 1.6rem; }
 .radio-cards { display: grid; gap: 0.7rem; }

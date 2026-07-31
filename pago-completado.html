@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="favicon-light.svg" media="(prefers-color-scheme: light)" />
+    <link rel="icon" href="favicon-dark.svg" media="(prefers-color-scheme: dark)" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <meta name="robots" content="noindex" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Pago — Juntos Siempre</title>
+  </head>
+  <body data-page="pago">
+    <main class="pago">
+      <div class="pago__card" data-pago aria-live="polite">
+        <div class="pago__spinner" aria-hidden="true"></div>
+        <h1 class="pago__title">Procesando tu pago…</h1>
+        <p class="pago__text">Un momento, estamos confirmando la operación.</p>
+      </div>
+    </main>
+    <script type="module" src="/src/pago.js"></script>
+  </body>
+</html>

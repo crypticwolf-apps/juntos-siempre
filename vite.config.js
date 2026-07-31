@@ -24,6 +24,8 @@ export default defineConfig({
         cookies: resolve(__dirname, 'cookies.html'),
         envios: resolve(__dirname, 'envios-devoluciones.html'),
         tallas: resolve(__dirname, 'guia-tallas.html'),
+        // Vuelta tras pagar (Stripe / PayPal).
+        pago: resolve(__dirname, 'pago-completado.html'),
         // Panel privado de gestión. No se enlaza desde el menú público.
         admin: resolve(__dirname, 'admin.html'),
       },

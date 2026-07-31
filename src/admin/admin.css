@@ -495,3 +495,106 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 600; line-height: 1.2; }
   .adm-actions .adm-btn { flex: 1 1 auto; }
   .adm-modal__foot { flex-direction: column; }
 }
+
+/* ===========================================================================
+   PULIDO PREMIUM
+   Refinamientos visuales por encima de la base: barra lateral con más
+   profundidad, tarjetas con acento, estadísticas con vida y mejor jerarquía.
+   =========================================================================== */
+
+/* --- Barra lateral con profundidad --- */
+.adm-side {
+  background:
+    radial-gradient(120% 60% at 0% 0%, rgba(176, 122, 78, 0.14) 0%, transparent 55%),
+    linear-gradient(180deg, #141310 0%, #0e0e0d 100%);
+  border-right: 1px solid rgba(244, 241, 234, 0.06);
+}
+.adm-side__brand { letter-spacing: 0.01em; }
+.adm-side__slogan { border-bottom: 1px solid rgba(244, 241, 234, 0.08); }
+.adm-nav-link {
+  position: relative;
+  font-weight: 500;
+}
+.adm-nav-link.is-active {
+  background: linear-gradient(180deg, #ffffff 0%, #f4f1ea 100%);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+}
+.adm-nav-link.is-active::before {
+  content: '';
+  position: absolute;
+  left: -1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 60%;
+  border-radius: 0 3px 3px 0;
+  background: var(--acento);
+}
+
+/* --- Encabezado de página con acento --- */
+.adm-page-head h1 { position: relative; letter-spacing: -0.01em; }
+.adm-page-head > div:first-child h1::after {
+  content: '';
+  display: block;
+  width: 42px;
+  height: 3px;
+  margin-top: 0.55rem;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--acento), var(--arena));
+}
+
+/* --- Tarjetas con línea de acento y elevación al pasar --- */
+.adm-card {
+  transition: box-shadow 0.18s ease, transform 0.18s ease, border-color 0.18s ease;
+}
+.adm-card:hover { box-shadow: 0 14px 40px rgba(14, 14, 13, 0.1); }
+.adm-card__title {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.adm-card__title::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 2px;
+  background: var(--acento);
+  flex: none;
+}
+
+/* --- Estadísticas con vida --- */
+.adm-stat {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.adm-stat::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--acento), var(--arena));
+}
+.adm-stat:hover { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(14, 14, 13, 0.12); }
+.adm-stat__num { color: var(--ink); }
+
+/* --- Botón primario con un punto más de intención --- */
+.adm-btn--primary {
+  background: linear-gradient(180deg, #232220 0%, #0e0e0d 100%);
+  box-shadow: 0 6px 18px rgba(14, 14, 13, 0.18);
+}
+.adm-btn--primary:hover:not(:disabled) { box-shadow: 0 10px 26px rgba(14, 14, 13, 0.26); }
+
+/* --- Barra de guardado translúcida --- */
+.adm-savebar {
+  background: rgba(244, 241, 234, 0.82);
+  backdrop-filter: saturate(1.4) blur(10px);
+  -webkit-backdrop-filter: saturate(1.4) blur(10px);
+}
+
+/* --- Barra superior en móvil, más cuidada --- */
+.adm-topbar { box-shadow: 0 2px 16px rgba(14, 14, 13, 0.2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .adm-card, .adm-stat, .adm-btn { transition: none; }
+}

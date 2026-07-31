@@ -15,6 +15,10 @@ import { invalidateCache } from '../lib/content.js';
 const PAGE_BY_BODY = { home: 'home', shop: 'shop', story: 'story', impact: 'impact' };
 const FOLDER_BY_PAGE = { home: 'homepage', shop: 'general', story: 'history', impact: 'impact' };
 
+// ¿Estamos dentro del marco de "vista por dispositivo"? Sirve para no repetir
+// los botones de dispositivo dentro del propio iframe.
+const NESTED = window.self !== window.top;
+
 const h = (tag, attrs = {}, children = []) => {
   const node = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
@@ -85,6 +89,8 @@ class VisualEditor {
     this.sections = new Map(); // key -> { id, data, original, is_visible, position, dirty }
     this.dirty = false;
     this.current = null;
+    this.imageTargets = []; // { node, id, btn }
+    this.frameOverlay = null;
   }
 
   async start() {
@@ -94,6 +100,7 @@ class VisualEditor {
     this.buildPanel();
     this.markEditables();
     this.markSections();
+    this.buildImageLayer();
 
     window.addEventListener('beforeunload', (e) => {
       if (!this.dirty) return;
@@ -148,28 +155,81 @@ class VisualEditor {
   // ELEMENTOS EDITABLES
   // -------------------------------------------------------------------------
   markEditables() {
-    const selector = '[data-cms-text], [data-cms-html], [data-cms-img], [data-cms-alt]';
+    const selector = '[data-cms-text], [data-cms-html], [data-cms-img]';
     document.querySelectorAll(selector).forEach((node) => {
-      if (node.closest('.ve-panel, .ve-bar')) return;
+      if (node.closest('.ve-panel, .ve-bar, .ve-frame, .ve-img-layer')) return;
 
-      const isImage = node.tagName === 'IMG';
-      const id = isImage ? node.dataset.cmsImg : node.dataset.cmsText || node.dataset.cmsHtml;
-      if (!id) return;
+      // --- Imágenes: se editan con un botón flotante (funciona incluso con el
+      //     hero, que está detrás del texto). Se recogen aquí. ---
+      if (node.tagName === 'IMG') {
+        const id = node.dataset.cmsImg;
+        if (!id || id.split('.')[0] !== this.pageSlug) return;
+        this.imageTargets.push({ node, id });
+        return;
+      }
 
-      const [page] = id.split('.');
-      if (page !== this.pageSlug) return;
+      // --- Texto: se edita directamente sobre la página (en su contexto real,
+      //     así las letras blancas se ven sobre su fondo). ---
+      const id = node.dataset.cmsText || node.dataset.cmsHtml;
+      if (!id || id.split('.')[0] !== this.pageSlug) return;
 
-      // El objetivo del clic: en las imágenes, el propio contenedor.
-      const target = isImage ? node.parentElement || node : node;
-      target.setAttribute('data-ve-editable', '');
-      target.appendChild(h('span', { class: 've-pencil', text: isImage ? '🖼' : '✏️', 'aria-hidden': 'true' }));
+      node.setAttribute('data-ve-editable', '');
+      node.setAttribute('data-ve-kind', node.hasAttribute('data-cms-html') ? 'html' : 'text');
 
-      target.addEventListener('click', (e) => {
+      // Si el elemento es un enlace con destino editable, añade un botón "🔗".
+      if (node.dataset.cmsAttr && /(^|,)\s*href:/.test(node.dataset.cmsAttr)) {
+        node.appendChild(
+          h('button', {
+            class: 've-link-btn', type: 'button', text: '🔗', contenteditable: 'false',
+            title: 'Cambiar a dónde lleva',
+            onClick: (e) => { e.preventDefault(); e.stopPropagation(); this.editLinkHref(node); },
+          })
+        );
+      }
+
+      node.addEventListener('click', (e) => {
+        if (e.target.closest('.ve-link-btn')) return;
         e.preventDefault();
         e.stopPropagation();
-        if (isImage) this.editImage(node, id);
-        else this.editText(node, id);
+        this.editTextInline(node, id);
       });
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // BOTONES FLOTANTES PARA CAMBIAR FOTOGRAFÍAS
+  // -------------------------------------------------------------------------
+  buildImageLayer() {
+    this.imgLayer = h('div', { class: 've-img-layer' });
+    document.body.appendChild(this.imgLayer);
+
+    this.imageTargets.forEach((t) => {
+      t.btn = h('button', {
+        class: 've-img-fab', type: 'button', title: 'Cambiar esta fotografía',
+        onClick: (e) => { e.preventDefault(); e.stopPropagation(); this.editImage(t.node, t.id); },
+      }, [h('span', { class: 've-img-fab__icon', text: '🖼' }), h('span', { text: 'Cambiar foto' })]);
+      this.imgLayer.appendChild(t.btn);
+    });
+
+    this.positionImageButtons();
+    const onScroll = () => {
+      cancelAnimationFrame(this._imgRaf);
+      this._imgRaf = requestAnimationFrame(() => this.positionImageButtons());
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+  }
+
+  positionImageButtons() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    this.imageTargets.forEach((t) => {
+      const r = t.node.getBoundingClientRect();
+      const visible = r.width > 20 && r.bottom > 40 && r.top < vh - 8 && r.right > 0 && r.left < vw;
+      if (!visible) { t.btn.style.display = 'none'; return; }
+      t.btn.style.display = 'inline-flex';
+      t.btn.style.top = `${Math.max(10, Math.min(r.top + 12, vh - 46))}px`;
+      t.btn.style.left = `${Math.min(Math.max(r.left + r.width / 2, 70), vw - 70)}px`;
     });
   }
 
@@ -263,33 +323,88 @@ class VisualEditor {
   }
 
   // -------------------------------------------------------------------------
-  // EDICIÓN DE TEXTO
+  // EDICIÓN DE TEXTO — directamente sobre la página
   // -------------------------------------------------------------------------
-  editText(node, id) {
-    document.querySelectorAll('.is-editing').forEach((n) => n.classList.remove('is-editing'));
-    (node.parentElement || node).classList.add('is-editing');
+  editTextInline(node, id) {
+    if (node.getAttribute('contenteditable') === 'true') return;
 
-    const value = this.fieldValue(id) || node.textContent.trim();
-    const isLong = value.length > 90;
+    // Cierra cualquier otra edición abierta.
+    document.querySelectorAll('[data-ve-editable].is-editing').forEach((n) => {
+      n.classList.remove('is-editing');
+      n.removeAttribute('contenteditable');
+    });
 
-    const control = isLong
-      ? h('textarea', { rows: '6' })
-      : h('input', { type: 'text' });
-    control.value = value;
+    const isHtml = node.dataset.veKind === 'html';
+    const linkBtn = node.querySelector('.ve-link-btn');
+    if (linkBtn) linkBtn.style.display = 'none';
 
+    const before = isHtml ? node.innerHTML : node.textContent;
+
+    node.setAttribute('contenteditable', 'true');
+    node.classList.add('is-editing');
+    node.focus();
+
+    // Coloca el cursor al final del texto.
+    const sel = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    // Lee el contenido sin los adornos del editor (el botón de enlace).
+    const readClean = () => {
+      const clone = node.cloneNode(true);
+      clone.querySelectorAll('.ve-link-btn').forEach((n) => n.remove());
+      return isHtml ? clone.innerHTML : clone.textContent;
+    };
+    const onInput = () => this.fieldValue(id, readClean());
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (isHtml) node.innerHTML = before; else node.textContent = before;
+        this.fieldValue(id, before);
+        node.blur();
+      } else if (e.key === 'Enter' && !isHtml && !e.shiftKey) {
+        e.preventDefault();
+        node.blur();
+      }
+    };
+    const finish = () => {
+      node.removeAttribute('contenteditable');
+      node.classList.remove('is-editing');
+      node.removeEventListener('input', onInput);
+      node.removeEventListener('keydown', onKey);
+      if (linkBtn) linkBtn.style.display = '';
+      this.positionImageButtons();
+    };
+
+    node.addEventListener('input', onInput);
+    node.addEventListener('keydown', onKey);
+    node.addEventListener('blur', finish, { once: true });
+  }
+
+  /** Cambia el destino de un enlace/botón. */
+  editLinkHref(node) {
+    const attr = node.dataset.cmsAttr || '';
+    const pair = attr.split(',').map((s) => s.trim()).find((s) => s.startsWith('href:'));
+    if (!pair) return;
+    const hrefId = pair.slice(5).trim();
+
+    const control = h('input', { type: 'text' });
+    control.value = this.fieldValue(hrefId) || node.getAttribute('href') || '';
     control.addEventListener('input', () => {
-      node.textContent = control.value;
-      this.fieldValue(id, control.value);
+      node.setAttribute('href', control.value);
+      this.fieldValue(hrefId, control.value);
     });
 
     this.openPanel({
-      title: 'Editar texto',
+      title: 'Destino del enlace',
       body: [
-        h('label', { class: 've-panel__label', text: this.labelFor(id) }),
+        h('label', { class: 've-panel__label', text: '¿A dónde lleva este botón?' }),
         control,
-        h('p', { class: 've-panel__hint', text: 'Los cambios se ven al momento. Se publican al pulsar "Guardar y publicar".' }),
+        h('p', { class: 've-panel__hint', text: 'Por ejemplo: tienda.html, historia.html o https://…' }),
       ],
-      onClose: () => (node.parentElement || node).classList.remove('is-editing'),
     });
     control.focus();
   }
@@ -414,33 +529,111 @@ class VisualEditor {
       onClick: () => this.discard(),
     });
 
-    const sizes = h('div', { class: 've-sizes' }, [
-      ['Escritorio', 1440, 900],
-      ['Tablet', 834, 1112],
-      ['Móvil', 390, 844],
+    // Botones de dispositivo: abren la página en un marco real de ese tamaño,
+    // donde se puede editar igual (las columnas se reordenan como en el móvil).
+    const sizes = NESTED ? null : h('div', { class: 've-sizes' }, [
+      ['💻 Escritorio', 1440, 900],
+      ['📱 Tablet', 834, 1112],
+      ['📲 Móvil', 390, 844],
     ].map(([label, w, hgt]) =>
       h('button', {
         class: 've-btn',
         type: 'button',
         text: label,
-        title: `Ver la página a ${w} píxeles de ancho`,
-        onClick: () => {
-          const url = location.pathname;
-          window.open(url, `ve-preview-${w}`, `width=${w},height=${hgt},scrollbars=yes`);
-        },
+        title: `Ver y editar a ${w} píxeles de ancho`,
+        onClick: () => this.enterResponsive(w, hgt),
       })
     ));
 
     this.bar = h('div', { class: 've-bar' }, [
-      h('span', { class: 've-bar__brand', text: '✏️ Editando la página' }),
+      h('span', { class: 've-bar__brand', text: NESTED ? '📱 Vista por dispositivo' : '✏️ Editando la página' }),
       this.stateText,
-      h('span', { style: 'font-size:.8rem; opacity:.7; margin-right:.35rem', text: 'Vista previa:' }),
+      NESTED ? null : h('span', { class: 've-bar__hint', text: 'Editar en:' }),
       sizes,
-      h('a', { class: 've-btn', href: 'admin.html', text: 'Volver al panel' }),
+      NESTED ? null : h('a', { class: 've-btn', href: 'admin.html', text: 'Volver al panel' }),
       this.discardBtn,
       this.saveBtn,
     ]);
     document.body.appendChild(this.bar);
+  }
+
+  // -------------------------------------------------------------------------
+  // VISTA Y EDICIÓN POR DISPOSITIVO (marco real que responde al ancho)
+  // -------------------------------------------------------------------------
+  enterResponsive(w, hgt) {
+    const open = () => this.openFrame(w, hgt);
+    if (this.dirty) {
+      if (!confirm('Para ver y editar en otro tamaño hay que publicar los cambios actuales. ¿Publicar ahora?')) return;
+      this.save().then(() => { if (!this.dirty) open(); });
+    } else {
+      open();
+    }
+  }
+
+  openFrame(w, hgt) {
+    this.closeFrame();
+
+    const iframe = h('iframe', {
+      class: 've-frame__screen',
+      src: location.href,
+      style: `width:${w}px; height:${hgt}px`,
+      title: 'Vista por dispositivo',
+    });
+
+    const stage = h('div', { class: 've-frame__stage' }, [iframe]);
+
+    const setSize = (ww, hh, btn) => {
+      iframe.style.width = `${ww}px`;
+      iframe.style.height = `${hh}px`;
+      toolbar.querySelectorAll('.ve-btn--primary').forEach((b) => b.classList.remove('ve-btn--primary'));
+      btn.classList.add('ve-btn--primary');
+    };
+
+    const deviceBtns = [
+      ['Escritorio', 1440, 900],
+      ['Tablet', 834, 1112],
+      ['Móvil', 390, 844],
+    ].map(([label, ww, hh]) => {
+      const btn = h('button', {
+        class: 've-btn' + (ww === w ? ' ve-btn--primary' : ''),
+        type: 'button', text: label,
+        onClick: () => setSize(ww, hh, btn),
+      });
+      return btn;
+    });
+
+    const rotate = h('button', {
+      class: 've-btn', type: 'button', text: '⟲ Girar',
+      onClick: () => {
+        const cw = iframe.style.width;
+        iframe.style.width = iframe.style.height;
+        iframe.style.height = cw;
+      },
+    });
+
+    const close = h('button', {
+      class: 've-btn ve-btn--light', type: 'button', text: '✕ Cerrar',
+      onClick: () => this.closeFrame(),
+    });
+
+    const toolbar = h('div', { class: 've-frame__bar' }, [
+      h('span', { class: 've-frame__title', text: 'Editar por dispositivo' }),
+      ...deviceBtns, rotate, close,
+    ]);
+
+    this.frameOverlay = h('div', { class: 've-frame' }, [toolbar, stage]);
+    document.body.appendChild(this.frameOverlay);
+    document.body.classList.add('ve-frame-open');
+  }
+
+  closeFrame() {
+    if (!this.frameOverlay) return;
+    this.frameOverlay.remove();
+    this.frameOverlay = null;
+    document.body.classList.remove('ve-frame-open');
+    // Se recarga para que la vista principal muestre lo que se haya publicado
+    // dentro del marco. No hay cambios sin publicar (se exige antes de entrar).
+    if (!this.dirty) location.reload();
   }
 
   // -------------------------------------------------------------------------

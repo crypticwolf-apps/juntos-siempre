@@ -7,41 +7,123 @@
 body.ve-on { padding-bottom: 92px; }
 
 /* --------------------------------------------------------------- RESALTES -- */
+/* El doble anillo (claro + acento) hace que se vea sobre cualquier fondo,
+   incluidas las zonas oscuras con letras blancas como el hero. */
 .ve-on [data-ve-editable] {
-  outline: 1px dashed rgba(176, 122, 78, 0.55);
-  outline-offset: 3px;
   cursor: pointer;
-  transition: outline-color 0.14s ease, background 0.14s ease;
   position: relative;
+  border-radius: 3px;
+  outline: 1px dashed rgba(176, 122, 78, 0.75);
+  outline-offset: 2px;
+  transition: outline-color 0.14s ease, box-shadow 0.14s ease;
 }
 .ve-on [data-ve-editable]:hover {
   outline: 2px solid #b07a4e;
-  background: rgba(176, 122, 78, 0.08);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7), 0 0 0 5px rgba(176, 122, 78, 0.4);
 }
 .ve-on [data-ve-editable].is-editing {
   outline: 2px solid #2f7d5d;
-  background: rgba(47, 125, 93, 0.09);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.7), 0 0 0 6px rgba(47, 125, 93, 0.45);
+  caret-color: #b07a4e;
 }
+.ve-on [data-ve-editable].is-editing { cursor: text; }
 
-.ve-pencil {
+/* Lápiz indicador (pseudo-elemento: no ensucia el texto editable) */
+.ve-on [data-ve-editable]::after {
+  content: '✏️';
   position: absolute;
-  top: -12px;
-  left: -12px;
-  width: 26px;
-  height: 26px;
+  top: -11px;
+  left: -11px;
+  width: 23px;
+  height: 23px;
   border-radius: 50%;
   background: #b07a4e;
   color: #fff;
-  font-size: 13px;
+  font-size: 11px;
   display: grid;
   place-items: center;
-  z-index: 5;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  pointer-events: none;
+  z-index: 6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   opacity: 0;
   transition: opacity 0.14s ease;
+  pointer-events: none;
 }
-.ve-on [data-ve-editable]:hover > .ve-pencil { opacity: 1; }
+.ve-on [data-ve-editable]:hover::after { opacity: 1; }
+.ve-on [data-ve-editable].is-editing::after { opacity: 0; }
+
+/* Botón para cambiar el destino de un enlace */
+.ve-link-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 23px;
+  height: 23px;
+  margin-left: 0.35rem;
+  border-radius: 50%;
+  background: #0e0e0d;
+  color: #fff;
+  font-size: 11px;
+  vertical-align: middle;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  user-select: none;
+}
+.ve-link-btn:hover { background: #b07a4e; }
+
+/* --------------------------------------------- BOTONES FLOTANTES DE IMAGEN -- */
+.ve-img-layer { position: fixed; inset: 0; z-index: 9998; pointer-events: none; }
+.ve-img-fab {
+  position: fixed;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #0e0e0d;
+  color: #f4f1ea;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
+  font: 600 0.82rem/1 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  border: 1px solid rgba(244, 241, 234, 0.3);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.38);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.14s ease, border-color 0.14s ease;
+}
+.ve-img-fab:hover { background: #b07a4e; border-color: #b07a4e; }
+.ve-img-fab__icon { font-size: 0.95rem; }
+
+/* -------------------------------------------------- VISTA POR DISPOSITIVO -- */
+.ve-frame {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  background: #26241f;
+  display: flex;
+  flex-direction: column;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+.ve-frame__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1rem;
+  background: #0e0e0d;
+  color: #f4f1ea;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+.ve-frame__title { font-weight: 600; font-size: 0.92rem; margin-right: auto; }
+.ve-frame__stage { flex: 1; overflow: auto; padding: clamp(0.75rem, 3vw, 1.75rem); }
+.ve-frame__screen {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  border: 0;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+}
+.ve-btn--light { background: #f4f1ea; color: #0e0e0d; border-color: #f4f1ea; font-weight: 600; }
+.ve-btn--light:hover { background: #fff; }
 
 /* --------------------------------------------------------------- SECCIONES -- */
 .ve-on [data-cms-section] { position: relative; }
@@ -172,7 +254,8 @@ body.ve-on { padding-bottom: 92px; }
 .ve-btn--primary { background: #f4f1ea; color: #0e0e0d; border-color: #f4f1ea; font-weight: 600; }
 .ve-btn--primary:hover { background: #fff; }
 .ve-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.ve-sizes { display: flex; gap: 0.3rem; }
+.ve-bar__hint { font-size: 0.8rem; opacity: 0.7; margin-right: 0.35rem; }
+.ve-sizes { display: flex; gap: 0.3rem; flex-wrap: wrap; }
 .ve-sizes button { padding: 0.5rem 0.7rem; font-size: 0.85rem; }
 
 .ve-gate {
@@ -195,5 +278,5 @@ body.ve-on { padding-bottom: 92px; }
   .ve-panel.is-open { transform: none; }
   .ve-bar { padding-bottom: max(0.8rem, env(safe-area-inset-bottom)); }
   .ve-bar__state { width: 100%; margin: 0 0 0.25rem; }
-  .ve-sizes { display: none; }
+  .ve-bar__hint { display: none; }
 }
